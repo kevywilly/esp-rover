@@ -7,7 +7,7 @@
     "idf.openOcdConfigs": [
         "board/esp32-wrover-kit-3.3v.cfg"
     ],
-    "idf.port": "/dev/cu.usbserial-110",
+    "idf.port": "/dev/cu.usbserial-0001",
     "idf.pythonBinPath": "/Users/kevywilly/.espressif/python_env/idf4.4_py3.9_env/bin/python",
     "idf.toolsPath": "/Users/kevywilly/.espressif",
     "idf.flashType": "UART",
@@ -15,5 +15,6 @@
         "numeric": "cpp",
         "chrono": "cpp",
         "complex": "cpp"
-    }
+    },
+    "C_Cpp.errorSquiggles": "Enabled"
 }
