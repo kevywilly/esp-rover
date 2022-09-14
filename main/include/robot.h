@@ -37,7 +37,7 @@ void robot_drive(const robot_config_t *rb_conf, float heading, float power) {
 
 }
 
-void robot_rotate(robot_config_t *rb_conf, rotation_dir_t dir, float power) {
+void robot_rotate(const robot_config_t *rb_conf, rotation_dir_t dir, float power) {
     ESP_LOGW(TAG, "Rotate: %d for power: %.2f%%", dir, power*100);
     for(int i=0; i < 4 ; i++)
         drivetrain_motor_spin(
@@ -48,7 +48,7 @@ void robot_rotate(robot_config_t *rb_conf, rotation_dir_t dir, float power) {
 
 }
 
-void robot_stop(robot_config_t *rb_conf) {
+void robot_stop(const robot_config_t *rb_conf) {
     ESP_LOGW(TAG, "Stop Robot Motion");
     for(int i=0; i < 4 ; i++)
         drivetrain_motor_spin(&rb_conf->dt_conf, i, 0);

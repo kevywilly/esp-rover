@@ -14,7 +14,9 @@
     "files.associations": {
         "numeric": "cpp",
         "chrono": "cpp",
-        "complex": "cpp"
+        "complex": "cpp",
+        "bitset": "c",
+        "algorithm": "c"
     },
     "C_Cpp.errorSquiggles": "Enabled"
 }

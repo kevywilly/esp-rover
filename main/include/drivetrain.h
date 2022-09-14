@@ -15,6 +15,8 @@
 #define MOTOR_BACKWARD {0,1}
 #define MOTOR_STOPPED {0,0}
 
+#define ESP_INTR_FLAG_DEFAULT 0
+
 typedef struct {
     int in1;
     int in2;
@@ -26,6 +28,7 @@ typedef struct {
     gpio_num_t pwm[4];
     gpio_num_t enca[4];
     gpio_num_t encb[4];
+    float rpm_factor[4];
 } drivetrain_config_t;
 
 float drivetrain_motor_get_duty(const drivetrain_config_t *dt_conf, int motor_id);
@@ -104,22 +107,22 @@ void drivetrain_motor_set_power(const drivetrain_config_t *dt_conf, int motor_id
     ESP_LOGW(TAG, "Setting power %.2f%% for motor %d", power*100, motor_id);
     switch(motor_id) {
         case 0:
-            mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_GEN_A, power*100);
+            mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_GEN_A, power*100*dt_conf->rpm_factor[0]);
             mcpwm_set_duty_type(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_GEN_A, MCPWM_DUTY_MODE_0);
             //mcpwm_set_signal_high(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_GEN_A);
             break;
         case 1:
-            mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_GEN_B, power*100);
+            mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_GEN_B, power*100*dt_conf->rpm_factor[1]);
             mcpwm_set_duty_type(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_GEN_B, MCPWM_DUTY_MODE_0);
             //mcpwm_set_signal_high(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_GEN_B);
             break;
         case 2:
-            mcpwm_set_duty(MCPWM_UNIT_1, MCPWM_TIMER_1, MCPWM_GEN_A, power*100);
+            mcpwm_set_duty(MCPWM_UNIT_1, MCPWM_TIMER_1, MCPWM_GEN_A, power*100*dt_conf->rpm_factor[2]);
             mcpwm_set_duty_type(MCPWM_UNIT_1, MCPWM_TIMER_1, MCPWM_GEN_A, MCPWM_DUTY_MODE_0);
             //mcpwm_set_signal_high(MCPWM_UNIT_1, MCPWM_TIMER_1, MCPWM_GEN_A);
             break;
         case 3:
-            mcpwm_set_duty(MCPWM_UNIT_1, MCPWM_TIMER_1, MCPWM_GEN_B, power*100);
+            mcpwm_set_duty(MCPWM_UNIT_1, MCPWM_TIMER_1, MCPWM_GEN_B, power*100*dt_conf->rpm_factor[3]);
             mcpwm_set_duty_type(MCPWM_UNIT_1, MCPWM_TIMER_1, MCPWM_GEN_A, MCPWM_DUTY_MODE_0);
             //mcpwm_set_signal_high(MCPWM_UNIT_1, MCPWM_TIMER_1, MCPWM_GEN_B);
             break;
@@ -142,22 +145,22 @@ void drivetrain_config(const drivetrain_config_t * dt_conf) {
     }
 
     // configure in1 and in2 pins
-    gpio_config_t io_conf_in1_in2 = {};
-    io_conf_in1_in2.intr_type = GPIO_INTR_DISABLE;
-    io_conf_in1_in2.mode = GPIO_MODE_OUTPUT;
-    io_conf_in1_in2.pin_bit_mask = in1_in2_bit_mask;
-    io_conf_in1_in2.pull_down_en = GPIO_PULLDOWN_ENABLE;
-    io_conf_in1_in2.pull_up_en = GPIO_PULLUP_DISABLE;
-    gpio_config(&io_conf_in1_in2);
+    gpio_config_t io_conf = {};
+    io_conf.intr_type = GPIO_INTR_DISABLE;
+    io_conf.mode = GPIO_MODE_OUTPUT;
+    io_conf.pin_bit_mask = in1_in2_bit_mask;
+    io_conf.pull_down_en = GPIO_PULLDOWN_ENABLE;
+    io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
+    gpio_config(&io_conf);
 
     // configure enc1 and ecb pins
-    gpio_config_t io_conf_enca_encb = {};
-    io_conf_enca_encb.intr_type = GPIO_INTR_POSEDGE;
-    io_conf_enca_encb.mode = GPIO_MODE_INPUT;
-    io_conf_enca_encb.pin_bit_mask = enca_encb_bit_mask;
-    io_conf_enca_encb.pull_down_en = GPIO_PULLDOWN_ENABLE;
-    io_conf_enca_encb.pull_up_en = GPIO_PULLUP_DISABLE;
-    gpio_config(&io_conf_enca_encb);
+    io_conf.intr_type = GPIO_INTR_POSEDGE;
+    io_conf.mode = GPIO_MODE_INPUT;
+    io_conf.pin_bit_mask = enca_encb_bit_mask;
+    io_conf.pull_down_en = GPIO_PULLDOWN_ENABLE;
+    io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
+    gpio_config(&io_conf);
+    
     
 
     // PWM see https://docs.espressif.com/projects/esp-idf/en/v4.4.2/esp32/api-reference/peripherals/mcpwm.html?highlight=mcpwm_unit_0
@@ -169,7 +172,7 @@ void drivetrain_config(const drivetrain_config_t * dt_conf) {
     mcpwm_gpio_init(MCPWM_UNIT_1, MCPWM1B, dt_conf->pwm[3]);
 
     mcpwm_config_t pwm_config;
-    pwm_config.frequency = 50;    //frequency = 50Hz, i.e. for every servo motor time period should be 20ms
+    pwm_config.frequency = 80;    //frequency = 50Hz, i.e. for every servo motor time period should be 20ms
     pwm_config.cmpr_a = 0;    //duty cycle of PWMxA = 0
     pwm_config.cmpr_b = 0;    //duty cycle of PWMxb = 0
     pwm_config.counter_mode = MCPWM_UP_COUNTER;
@@ -177,6 +180,7 @@ void drivetrain_config(const drivetrain_config_t * dt_conf) {
 
     mcpwm_init(MCPWM_UNIT_0, MCPWM_TIMER_0, &pwm_config);    //Configure PWM0A & PWM0B with above settings
     mcpwm_init(MCPWM_UNIT_1, MCPWM_TIMER_1, &pwm_config);    //Configure PWM1A & PWM1B with above settings
+
 
 }
 
