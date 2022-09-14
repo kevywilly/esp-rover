@@ -10,11 +10,12 @@
 #include "protocol_examples_common.h"
 #include "esp_tls_crypto.h"
 #include <esp_http_server.h>
-#include "robot.h"
+#include "main.h"
+
+
 
 #if CONFIG_EXAMPLE_BASIC_AUTH
 
-robot_config_t robot
 typedef struct {
     char    *username;
     char    *password;
@@ -150,24 +151,6 @@ static esp_err_t hello_get_handler(httpd_req_t *req)
         free(buf);
     }
 
-    buf_len = httpd_req_get_hdr_value_len(req, "Test-Header-2") + 1;
-    if (buf_len > 1) {
-        buf = malloc(buf_len);
-        if (httpd_req_get_hdr_value_str(req, "Test-Header-2", buf, buf_len) == ESP_OK) {
-            ESP_LOGI(TAG, "Found header => Test-Header-2: %s", buf);
-        }
-        free(buf);
-    }
-
-    buf_len = httpd_req_get_hdr_value_len(req, "Test-Header-1") + 1;
-    if (buf_len > 1) {
-        buf = malloc(buf_len);
-        if (httpd_req_get_hdr_value_str(req, "Test-Header-1", buf, buf_len) == ESP_OK) {
-            ESP_LOGI(TAG, "Found header => Test-Header-1: %s", buf);
-        }
-        free(buf);
-    }
-
     /* Read URL query string length and allocate memory for length + 1,
      * extra byte for null termination */
     buf_len = httpd_req_get_url_query_len(req) + 1;
@@ -177,27 +160,52 @@ static esp_err_t hello_get_handler(httpd_req_t *req)
             ESP_LOGI(TAG, "Found URL query => %s", buf);
             char param[32];
             /* Get value of expected key from query string */
-            if (httpd_query_key_value(buf, "query1", param, sizeof(param)) == ESP_OK) {
-                ESP_LOGI(TAG, "Found URL query parameter => query1=%s", param);
-            }
-            if (httpd_query_key_value(buf, "query3", param, sizeof(param)) == ESP_OK) {
-                ESP_LOGI(TAG, "Found URL query parameter => query3=%s", param);
-            }
-            if (httpd_query_key_value(buf, "query2", param, sizeof(param)) == ESP_OK) {
-                ESP_LOGI(TAG, "Found URL query parameter => query2=%s", param);
+            if (httpd_query_key_value(buf, "cmd", param, sizeof(param)) == ESP_OK) {
+                ESP_LOGI(TAG, "Found URL query parameter => cmd=%s", param);
+                
+                if(strcmp(param, CMD_DRIVE) == 0) {
+                    ESP_LOGI(TAG, "Found Drive Command");
+                    float heading = 0.0;
+                    float power = 0.0;
+                    
+                    if (httpd_query_key_value(buf, "heading", param, sizeof(param)) == ESP_OK) {
+                        ESP_LOGI(TAG, "Found Heading Param: %s", param);
+                        heading = atof(param);
+                    }
+
+                    if (httpd_query_key_value(buf, "power", param, sizeof(param)) == ESP_OK) {
+                        ESP_LOGI(TAG, "Found Power Param: %s", param);
+                        power = atof(param);
+                    }
+
+                    robot_drive(&rb_conf, heading, power/100.0);
+
+                } else if (strcmp(param, CMD_ROTATE) == 0) {
+                    ESP_LOGI(TAG, "Found Rotate Command");
+                    float power = 0.0;
+                    rotation_dir_t dir = ROTATE_CW;
+                    if (httpd_query_key_value(buf, "power", param, sizeof(param)) == ESP_OK) {
+                        ESP_LOGI(TAG, "Found Power Param: %s", param);
+                        power = atof(param);
+                    }
+                    if (httpd_query_key_value(buf, "heading", param, sizeof(param)) == ESP_OK) {
+                        ESP_LOGI(TAG, "Found Power Param: %s", param);
+                        dir = (atof(param) < 0) ? ROTATE_CCW : ROTATE_CW;
+                    }
+                    robot_rotate(&rb_conf, dir, power/100.0);
+                }
+                else if (strcmp(param, CMD_STOP) == 0) {
+                    ESP_LOGI(TAG, "Found Stop Command");
+                    robot_stop(&rb_conf);
+                }
             }
         }
         free(buf);
     }
 
-    /* Set some custom headers */
-    httpd_resp_set_hdr(req, "Custom-Header-1", "Custom-Value-1");
-    httpd_resp_set_hdr(req, "Custom-Header-2", "Custom-Value-2");
 
-    /* Send response with custom headers and body set as the
-     * string passed in user context*/
-    const char* resp_str = (const char*) req->user_ctx;
-    httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
+    //httpd_resp_send_chunk(req, html_doc, HTTPD_RESP_USE_STRLEN);
+    httpd_resp_send(req, html_doc, HTTPD_RESP_USE_STRLEN);
 
     /* After sending the HTTP response the old HTTP request
      * headers are lost. Check if HTTP request headers can be read now. */
@@ -213,7 +221,7 @@ static const httpd_uri_t hello = {
     .handler   = hello_get_handler,
     /* Let's pass response string in user
      * context to demonstrate it's usage */
-    .user_ctx  = "Hello World!"
+    .user_ctx  = NULL
 };
 
 /* An HTTP POST handler */

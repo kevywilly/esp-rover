@@ -16,7 +16,9 @@
         "chrono": "cpp",
         "complex": "cpp",
         "bitset": "c",
-        "algorithm": "c"
+        "algorithm": "c",
+        "*.ipp": "cpp",
+        "*.inc": "cpp"
     },
     "C_Cpp.errorSquiggles": "Enabled"
 }

@@ -23,6 +23,13 @@
 // Define led pin
 #define LED_PIN GPIO_NUM_2
 
+
+const char * CMD_DRIVE = "drive";
+const char * CMD_STOP = "stop";
+const char * CMD_ROTATE = "rotate";
+const char * P_HEADING = "heading";
+const char * P_POWER = "power";
+
 static const drivetrain_config_t dt_conf = {
     .in1 = IN1_PINS, 
     .in2 = IN2_PINS, 
@@ -131,4 +138,51 @@ static void calibrate_motors() {
 
 }
 
+const char * html_doc = "<!DOCTYPE html>"
+"<html lang='en'>"
+    "<head>"
+        "<title>ESP Web Server</title>"
+        "<meta content='width=device-width, initial-scale=1' name='viewport'>"
+        "<link href='data:,' rel='icon'>"
+        "<style>"
+            "html {font-family: Helvetica;display: inline-block;margin: 0 auto;text-align: center;}"
+            "h1 {color: #0F3376;padding: 2vh;}"
+            "p {font-size: 1rem;}.button {display: inline-block;background-color: #e7bd3b;border: none;border-radius: 4px;color: white;padding: 8px 20px;text-decoration: none;font-size: 16px;margin: 2px 8px 2px 8px;cursor: pointer;}"
+            ".button-red {background-color: red;}"
+            ".button-green {background-color: green;}"
+            "</style>"
+    "</head>"
+    "<body>"
+        "<h1>ESP Rover</h1>"
+        "<p>Action: <strong>{{action}}</strong></p>"
+        "<p>"
+            "<a href='/hello?cmd=led&status=1'>"
+                "<button class='button'>LED ON</button>"
+            "</a>"
+            "<a href='/hello?cmd=led&status=0'><button class='button button-red'>LED OFF</button></a>"
+        "</p>"
+        "<hr/>"
+        "<p>"
+            "<a href='/hello?cmd=drive&heading=315&power=80'><button class='button button-green'>Forward LT</button></a>"
+            "<a href='/hello?cmd=drive&heading=0&power=80'><button class='button button-green'>Forward</button></a>"
+            "<a href='/hello?cmd=drive&heading=45&power=80'><button class='button button-green'>Forward RT</button></a>"
+        "</p>"
+        "<p>"
+            "<a href='/hello?cmd=rotate&heading=-1&power=80'><button class='button button-green'>Rot Left</button></a>"
+            "<a href='/hello?cmd=drive&heading=270&power=80'><button class='button button-green'>Left</button></a>"
+            "<a href='/hello?cmd=drive&heading=90&power=80'><button class='button button-green'>Right</button></a>"
+            "<a href='/hello?cmd=rotate&heading=1&power=80'><button class='button button-green'>Rot Right</button></a>"
+        "</p>"
+        "<p>"
+            "<a href='/hello?cmd=drive&heading=225&power=80'><button class='button button-green'>Reverse LT</button></a>"
+            "<a href='/hello?cmd=drive&heading=180&power=80'><button class='button button-green'>Reverse</button></a>"
+            "<a href='/hello?cmd=drive&heading=135&power=80'><button class='button button-green'>Reverse RT</button></a>"
+        "</p>"
+        "<hr/>"
+        "<p>"
+            "<a href='/hello?cmd=stop'><button class='button button-red'>Stop</button></a>"
+        "</p>"
+        "<p></p>"
+    "</body>"
+"</html>";
 #endif
