@@ -12,68 +12,17 @@
 // https://github.com/espressif/esp-idf/tree/d6d8324ad9b957f85ecb323ec0db12c4d03a93c4/examples/protocols/http_server/simple
 
 
-static const char *TAG = "esprover";
+static const char *TAG = "ESP Rover";
 
-#include "webserver.h"
+#include "include/robot/robot.h"
+#include "include/http/webserver.h"
 
-/*
-#define CALIBRATE 0
-
-static void run(void *arg)
-{
-   
-
-    //config_pins(pin);
-    int delay_ms = 2000;
-   
-    robot_config(&rb_conf);
-
-    if(CALIBRATE) {
-        calibrate_motors();
-        while(true) {
-            vTaskDelay(pdMS_TO_TICKS(delay_ms));
-        }
-    }
-
-    for(int h=0; h <= 360; h+=45) {
-        printf("\n---- DRIVE WITH HEADING: %d ---\n", h);
-        robot_drive(&rb_conf, h, 0.8);
-        vTaskDelay(pdMS_TO_TICKS(delay_ms));
-    }
-    
-    printf("\n---- ROTATE CW ---\n" );
-    robot_rotate(&rb_conf, ROTATE_CW, 0.8);
-    vTaskDelay(pdMS_TO_TICKS(delay_ms));
-
-    printf("\n---- ROTATE CW ---\n" );
-    robot_rotate(&rb_conf, ROTATE_CCW, 0.8);
-    vTaskDelay(pdMS_TO_TICKS(delay_ms));
-
-    printf("\n---- STOP ---\n" );
-    robot_stop(&rb_conf);
-    
-    
-    while (true) {
-        //std::cout << "Hello Rover"<< i << '\n';
-        vTaskDelay(pdMS_TO_TICKS(delay_ms));
-    
-    }
-    
-}
-*/
-/*
-void app_main(void)
-{
-
-    xTaskCreate(run, "run esp rover", 4096, NULL, 10, NULL);
-
-}
-*/
-
-
+#define foo CONFIG_POWER_PARAM_NAME
 void app_main(void)
 {
     static httpd_handle_t server = NULL;
+
+    robot_config(&robot);
 
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_netif_init());

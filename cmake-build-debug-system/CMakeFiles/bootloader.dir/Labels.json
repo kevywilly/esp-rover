@@ -1,0 +1,43 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/Users/kevywilly/esp-rover-cpp/cmake-build-debug-system/CMakeFiles/bootloader"
+		},
+		{
+			"file" : "/Users/kevywilly/esp-rover-cpp/cmake-build-debug-system/CMakeFiles/bootloader.rule"
+		},
+		{
+			"file" : "/Users/kevywilly/esp-rover-cpp/cmake-build-debug-system/CMakeFiles/bootloader-complete.rule"
+		},
+		{
+			"file" : "/Users/kevywilly/esp-rover-cpp/cmake-build-debug-system/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule"
+		},
+		{
+			"file" : "/Users/kevywilly/esp-rover-cpp/cmake-build-debug-system/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule"
+		},
+		{
+			"file" : "/Users/kevywilly/esp-rover-cpp/cmake-build-debug-system/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule"
+		},
+		{
+			"file" : "/Users/kevywilly/esp-rover-cpp/cmake-build-debug-system/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule"
+		},
+		{
+			"file" : "/Users/kevywilly/esp-rover-cpp/cmake-build-debug-system/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule"
+		},
+		{
+			"file" : "/Users/kevywilly/esp-rover-cpp/cmake-build-debug-system/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule"
+		},
+		{
+			"file" : "/Users/kevywilly/esp-rover-cpp/cmake-build-debug-system/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"bootloader"
+		],
+		"name" : "bootloader"
+	}
+}
