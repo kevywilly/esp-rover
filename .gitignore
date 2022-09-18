@@ -3,3 +3,5 @@ sdkconfig
 sdkconfig.old
 cmake-build*
 export
+.vscode
+.devcontainer
