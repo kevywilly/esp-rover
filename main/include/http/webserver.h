@@ -11,6 +11,7 @@
 #include "esp_tls_crypto.h"
 #include <esp_http_server.h>
 #include "robot/robot.h"
+#include "robot/calibration.h"
 #include "esp_log.h"
 #include "esp_http_server.h"
 #include "esp_system.h"
@@ -21,26 +22,56 @@
 #include "docroot.h"
 #include <sys/param.h>
 
-static char * process_request(cJSON *root) {
 
-    char * cmd = cJSON_GetObjectItem(root, CONFIG_CMD_PARAM_NAME)->valuestring;
+static char * process_stop_request() {
+    robot_stop(&robot);
+    return "Processed Stop Request.";
+}
+static char * process_drive_request(cJSON *root) {
+    double heading = cJSON_GetObjectItem(root, CONFIG_HEADING_PARAM_NAME)->valuedouble;
+    double power = cJSON_GetObjectItem(root, CONFIG_POWER_PARAM_NAME)->valuedouble;
 
-    ESP_LOGI(TAG, "received command cmd = %s", cmd);
-    if(strcmp(cmd, CONFIG_DRIVE_COMMAND) == 0 || strcmp(cmd, CONFIG_ROTATE_COMMAND) == 0) {
-        double heading = cJSON_GetObjectItem(root, CONFIG_HEADING_PARAM_NAME)->valuedouble;
-        double power = cJSON_GetObjectItem(root, CONFIG_POWER_PARAM_NAME)->valuedouble;
-
-        ESP_LOGI(TAG, "Received Command: <%s heading = %f, power = %f>", cmd, heading, power);
-
-        if(strcmp(cmd, "drive") == 0) {
-            robot_drive(&robot, heading, power);
-            return "Processed DRIVE Request.";
-        } else if(strcmp(cmd, "rotate") == 0) {
-            robot_rotate(&robot, heading, power);
-            return "Processed DRIVE Request.";
-        }
+    if(heading ==0 && power == 0) {
+        return process_stop_request();
     }
 
+    ESP_LOGI(TAG, "Received Command: <Drive heading = %f, power = %f>", heading, power);
+    //drive_request_t req = {.heading = heading, .power = power}
+    robot_drive(&robot, (drive_request_t){heading, power});
+    return "Processed DRIVE Request.";
+}
+
+static char * process_rotate_request(cJSON *root) {
+    double heading = cJSON_GetObjectItem(root, CONFIG_HEADING_PARAM_NAME)->valuedouble;
+    double power = cJSON_GetObjectItem(root, CONFIG_POWER_PARAM_NAME)->valuedouble;
+
+    if(heading ==0 && power == 0) {
+        return process_stop_request();
+    }
+
+    rotation_dir_t dir = heading < 0 ? ROTATE_CCW : ROTATE_CW;
+
+    ESP_LOGI(TAG, "Received Command: <Rotate direction = %d, power = %f>", dir, power);
+
+    robot_rotate(&robot, (rotation_request_t){dir, power});
+    return "Processed Rotation DRIVE Request.";
+}
+
+static char * process_request(cJSON *root) {
+    char * cmd = cJSON_GetObjectItem(root, CONFIG_CMD_PARAM_NAME)->valuestring;
+
+    ESP_LOGI(TAG, "=========== %s ==========", cmd);
+
+    if(strcmp(cmd, CONFIG_DRIVE_COMMAND) == 0) {
+        return process_drive_request(root);
+    } else if(strcmp(cmd, CONFIG_STOP_COMMAND) == 0) {
+        return process_rotate_request(root);
+    } else if(strcmp(cmd, CONFIG_ROTATE_COMMAND) == 0) {
+        return process_rotate_request(root);
+    } else if(strcmp(cmd, CONFIG_CALIBRATE_COMMAND) == 0) {
+        return calibrate_motors(&robot);
+    }
+    ESP_LOGI(TAG, "=========== end %s ==========", cmd);
     return "Unknown api request was ignored.";
 }
 
@@ -78,13 +109,15 @@ static esp_err_t api_post_handler(httpd_req_t *req) {
     }
 
     cJSON *root = cJSON_Parse(buf);
-    char * resp = process_request(root);
+    process_request(root);
     cJSON_Delete(root);
 
     // End response
-    httpd_resp_sendstr(req, resp);
+    //httpd_resp_sendstr(req, resp);
+    httpd_resp_send_chunk(req, NULL, 0);
     return ESP_OK;
 }
+
 
 static httpd_handle_t start_webserver()
 {

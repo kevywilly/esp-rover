@@ -10,7 +10,8 @@
  */
 
 // https://github.com/espressif/esp-idf/tree/d6d8324ad9b957f85ecb323ec0db12c4d03a93c4/examples/protocols/http_server/simple
-
+// https://seamonsters-2605.github.io/archive/mecanum/
+// for turning [-1,1]sin(angle+1/4π) * magnitude + turn
 
 static const char *TAG = "ESP Rover";
 

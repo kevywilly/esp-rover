@@ -18,6 +18,15 @@ typedef struct {
     gpio_num_t led_pin;
 } robot_config_t;
 
+typedef struct {
+    double heading;
+    double power;
+}drive_request_t;
+
+typedef struct {
+    rotation_dir_t dir;
+    double power;
+}rotation_request_t;
 
 static const robot_config_t robot = {
         .drivetrain = {
@@ -38,25 +47,31 @@ void robot_config(const robot_config_t *robot) {
     drivetrain_config(&robot->drivetrain);
 }
 
-void robot_drive(const robot_config_t *robot, float heading, float power) {
-    ESP_LOGW(TAG, "Drive heading: %.2f%% for power: %.2f%%", heading, power);
-    float radians = RADIANS * (90 - heading);
+void robot_drive(const robot_config_t *robot, drive_request_t request) {
+    ESP_LOGW(TAG, "Drive heading: %.2f%% for power: %.2f%%", request.heading, request.power);
+    double radians = RADIANS*request.heading;
 
-    float v1 = sin(radians + 0.25 * M_PI) * power;
-    float v2 = sin(radians - 0.25 * M_PI) * power;
+    double v1 = sin(radians + 0.25 * M_PI);// * request.power;
+    double v2 = sin(radians - 0.25 * M_PI);// * request.power;
+    double dir1 = v1 < 0 ? -1 : 1;
+    double dir2 = v2 < 0 ? -1 : 1;
+    double diff_from_1 = fabs(v1) > fabs(v2) ? 1-fabs(v1) : 1 - fabs(v2);
+
+    v1 += dir1*diff_from_1*request.power;
+    v2 += dir2*diff_from_1*request.power;
     
     for(int i=0; i < 4 ; i++)
         drivetrain_motor_spin(&robot->drivetrain, i, ((i + 1) % 2 > 0) ? v1 : v2);
 
 }
 
-void robot_rotate(const robot_config_t *robot, rotation_dir_t dir, float power) {
-    ESP_LOGW(TAG, "Rotate: %d for power: %.2f%%", dir, power*100);
+void robot_rotate(const robot_config_t *robot, rotation_request_t request) {
+    ESP_LOGW(TAG, "Rotate: %d for power: %.2f%%", request.dir, request.power);
     for(int i=0; i < 4 ; i++)
         drivetrain_motor_spin(
             &robot->drivetrain,
             i, 
-            power * ((dir == ROTATE_CW) ? CW_ROTATION_MATRIX[i] : CCW_ROTATION_MATRIX[i])
+            request.power * ((request.dir == ROTATE_CW) ? CW_ROTATION_MATRIX[i] : CCW_ROTATION_MATRIX[i])
         );
 
 }

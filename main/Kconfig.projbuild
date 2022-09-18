@@ -122,6 +122,10 @@ menu "ESP Rover Commands and Parameters"
         string "Rotate command"
         default "rotate"
 
+    config CALIBRATE_COMMAND
+            string "Calibration command"
+            default "calibrate"
+
     config CMD_PARAM_NAME
         string "Parameter used for command"
         default "cmd"
