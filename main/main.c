@@ -24,7 +24,6 @@ void app_main(void)
     static httpd_handle_t server = NULL;
 
     robot_config(&robot);
-
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
