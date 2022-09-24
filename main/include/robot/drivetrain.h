@@ -105,24 +105,29 @@ float drivetrain_motor_get_duty(const drivetrain_config_t *drivetrain, int motor
  */
 void drivetrain_motor_set_power(const drivetrain_config_t *drivetrain, int motor_id, float power) {
     ESP_LOGW(TAG, "Setting power %.2f%% for motor %d", power*100, motor_id);
+
+    float duty = power * 100;
+    duty = duty > 100 ? 100 : duty;
+    duty = duty < 0 ? 0 : duty;
+
     switch(motor_id) {
         case 0:
-            mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_GEN_A, power * 100 * drivetrain->rpm_factor[0]);
+            mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_GEN_A, duty * drivetrain->rpm_factor[0]);
             mcpwm_set_duty_type(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_GEN_A, MCPWM_DUTY_MODE_0);
             //mcpwm_set_signal_high(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_GEN_A);
             break;
         case 1:
-            mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_GEN_B, power * 100 * drivetrain->rpm_factor[1]);
+            mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_GEN_B, duty * drivetrain->rpm_factor[1]);
             mcpwm_set_duty_type(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_GEN_B, MCPWM_DUTY_MODE_0);
             //mcpwm_set_signal_high(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_GEN_B);
             break;
         case 2:
-            mcpwm_set_duty(MCPWM_UNIT_1, MCPWM_TIMER_1, MCPWM_GEN_A, power * 100 * drivetrain->rpm_factor[2]);
+            mcpwm_set_duty(MCPWM_UNIT_1, MCPWM_TIMER_1, MCPWM_GEN_A, duty * drivetrain->rpm_factor[2]);
             mcpwm_set_duty_type(MCPWM_UNIT_1, MCPWM_TIMER_1, MCPWM_GEN_A, MCPWM_DUTY_MODE_0);
             //mcpwm_set_signal_high(MCPWM_UNIT_1, MCPWM_TIMER_1, MCPWM_GEN_A);
             break;
         case 3:
-            mcpwm_set_duty(MCPWM_UNIT_1, MCPWM_TIMER_1, MCPWM_GEN_B, power * 100 * drivetrain->rpm_factor[3]);
+            mcpwm_set_duty(MCPWM_UNIT_1, MCPWM_TIMER_1, MCPWM_GEN_B, duty * drivetrain->rpm_factor[3]);
             mcpwm_set_duty_type(MCPWM_UNIT_1, MCPWM_TIMER_1, MCPWM_GEN_A, MCPWM_DUTY_MODE_0);
             //mcpwm_set_signal_high(MCPWM_UNIT_1, MCPWM_TIMER_1, MCPWM_GEN_B);
             break;

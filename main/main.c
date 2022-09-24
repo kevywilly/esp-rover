@@ -19,11 +19,20 @@ static const char *TAG = "ESP Rover";
 #include "include/http/webserver.h"
 
 #define foo CONFIG_POWER_PARAM_NAME
+
+void vRobotTask(void * args) {
+    robot_drive(&robot, (drive_request_t){.power = 0.1, .heading = 0.0});
+    vTaskDelay(pdMS_TO_TICKS(10000));
+    robot_stop(&robot);
+    vTaskDelay(portMAX_DELAY);
+
+}
 void app_main(void)
 {
     static httpd_handle_t server = NULL;
 
     robot_config(&robot);
+
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
@@ -47,6 +56,6 @@ void app_main(void)
 #endif // CONFIG_EXAMPLE_CONNECT_ETHERNET
 
     /* Start the server for the first time */
-    //xTaskCreate(run, "run esp rover", 4096, NULL, 10, NULL);
+    //xTaskCreate(vRobotTask, "run esp rover", 4096, NULL, 10, NULL);
     server = start_webserver();
 }
