@@ -23,51 +23,26 @@
 #include <sys/param.h>
 
 
-static char * process_stop_request() {
-    robot_stop(&robot);
-    return "Processed Stop Request.";
-}
-static char * process_drive_request(cJSON *root) {
+static char * process_move_request(cJSON *root) {
     double heading = cJSON_GetObjectItem(root, CONFIG_HEADING_PARAM_NAME)->valuedouble;
     double power = cJSON_GetObjectItem(root, CONFIG_POWER_PARAM_NAME)->valuedouble;
+    double turn = cJSON_GetObjectItem(root, CONFIG_TURN_PARAM_NAME)->valuedouble;
 
-    if(heading ==0 && power == 0) {
-        return process_stop_request();
-    }
-
-    ESP_LOGI(TAG, "Received Command: <Drive heading = %f, power = %f>", heading, power);
+    ESP_LOGI(TAG, "Received Command: <Move heading = %f, power = %f, turn = %f>", heading, power, turn);
     //drive_request_t req = {.heading = heading, .power = power}
-    robot_drive(&robot, (drive_request_t){heading, power});
+    robot_move(&robot, (robot_move_t){.heading = heading, .power = power, .turn = turn});
     return "Processed DRIVE Request.";
 }
 
-static char * process_rotate_request(cJSON *root) {
-    double heading = cJSON_GetObjectItem(root, CONFIG_HEADING_PARAM_NAME)->valuedouble;
-    double power = cJSON_GetObjectItem(root, CONFIG_POWER_PARAM_NAME)->valuedouble;
 
-    if(heading ==0 && power == 0) {
-        return process_stop_request();
-    }
-
-    rotation_dir_t dir = heading < 0 ? ROTATE_CCW : ROTATE_CW;
-
-    ESP_LOGI(TAG, "Received Command: <Rotate direction = %d, power = %f>", dir, power);
-
-    robot_rotate(&robot, (rotation_request_t){dir, power});
-    return "Processed Rotation DRIVE Request.";
-}
 
 static char * process_request(cJSON *root) {
     char * cmd = cJSON_GetObjectItem(root, CONFIG_CMD_PARAM_NAME)->valuestring;
 
     ESP_LOGI(TAG, "=========== %s ==========", cmd);
 
-    if(strcmp(cmd, CONFIG_DRIVE_COMMAND) == 0) {
-        return process_drive_request(root);
-    } else if(strcmp(cmd, CONFIG_STOP_COMMAND) == 0) {
-        return process_rotate_request(root);
-    } else if(strcmp(cmd, CONFIG_ROTATE_COMMAND) == 0) {
-        return process_rotate_request(root);
+   if(strcmp(cmd, CONFIG_MOVE_COMMAND) == 0) {
+        return process_move_request(root);
     } else if(strcmp(cmd, CONFIG_CALIBRATE_COMMAND) == 0) {
         return calibrate_motors(&robot);
     }

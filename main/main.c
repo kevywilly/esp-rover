@@ -13,17 +13,21 @@
 // https://seamonsters-2605.github.io/archive/mecanum/
 // for turning [-1,1]sin(angle+1/4π) * magnitude + turn
 
-static const char *TAG = "ESP Rover";
 
-#include "include/robot/robot.h"
-#include "include/http/webserver.h"
+
+#include "robot/robot.h"
+#include "http/webserver.h"
+#include "globals.h"
 
 #define foo CONFIG_POWER_PARAM_NAME
 
+
 void vRobotTask(void * args) {
-    robot_drive(&robot, (drive_request_t){.power = 0.1, .heading = 0.0});
-    vTaskDelay(pdMS_TO_TICKS(10000));
-    robot_stop(&robot);
+    robot_move(&robot, (robot_move_t){.power = 1.0, .heading = 90.0, .turn = 0.0});
+    vTaskDelay(pdMS_TO_TICKS(2000));
+    robot_move(&robot, (robot_move_t){.power = 1.0, .heading = 90.0, .turn = 0.2});
+    vTaskDelay(pdMS_TO_TICKS(2000));
+    robot_move(&robot, (robot_move_t){.power = 0, .heading = 0, .turn = 0.2});
     vTaskDelay(portMAX_DELAY);
 
 }
@@ -36,26 +40,10 @@ void app_main(void)
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
-
-    /* This helper function configures Wi-Fi or Ethernet, as selected in menuconfig.
-     * Read "Establishing Wi-Fi or Ethernet Connection" section in
-     * examples/protocols/README.md for more information about this function.
-     */
     ESP_ERROR_CHECK(example_connect());
-
-    /* Register event handlers to stop the server when Wi-Fi or Ethernet is disconnected,
-     * and re-start it upon connection.
-     */
-#ifdef CONFIG_EXAMPLE_CONNECT_WIFI
     ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &connect_handler, &server));
     ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &disconnect_handler, &server));
-#endif // CONFIG_EXAMPLE_CONNECT_WIFI
-#ifdef CONFIG_EXAMPLE_CONNECT_ETHERNET
-    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_ETH_GOT_IP, &connect_handler, &server));
-    ESP_ERROR_CHECK(esp_event_handler_register(ETH_EVENT, ETHERNET_EVENT_DISCONNECTED, &disconnect_handler, &server));
-#endif // CONFIG_EXAMPLE_CONNECT_ETHERNET
 
-    /* Start the server for the first time */
     //xTaskCreate(vRobotTask, "run esp rover", 4096, NULL, 10, NULL);
     server = start_webserver();
 }

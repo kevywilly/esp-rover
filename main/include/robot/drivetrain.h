@@ -6,6 +6,7 @@
 #include "driver/mcpwm.h"
 #include <stdio.h>
 #include <math.h>
+#include "globals.h"
 
 #ifndef RADIANS
 #define RADIANS 0.0174533
@@ -106,9 +107,9 @@ float drivetrain_motor_get_duty(const drivetrain_config_t *drivetrain, int motor
 void drivetrain_motor_set_power(const drivetrain_config_t *drivetrain, int motor_id, float power) {
     ESP_LOGW(TAG, "Setting power %.2f%% for motor %d", power*100, motor_id);
 
-    float duty = power * 100;
-    duty = duty > 100 ? 100 : duty;
-    duty = duty < 0 ? 0 : duty;
+    double duty = power * 99.0;
+    duty = duty > 99.0 ? 99.0 : duty;
+
 
     switch(motor_id) {
         case 0:

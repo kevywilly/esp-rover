@@ -114,6 +114,10 @@ menu "ESP Rover Commands and Parameters"
         string "Drive command"
         default "drive"
 
+    config MOVE_COMMAND
+            string "MOVE command"
+            default "move"
+
     config STOP_COMMAND
         string "Stop command"
         default "stop"
@@ -137,6 +141,10 @@ menu "ESP Rover Commands and Parameters"
     config POWER_PARAM_NAME
         string "Parameter used for power setting"
         default "power"
+
+    config TURN_PARAM_NAME
+        string "Parameter used for turn setting"
+        default "turn"
 
 endmenu
 # IN1_PINS   {GPIO_NUM_14, GPIO_NUM_16, GPIO_NUM_21,  GPIO_NUM_0}

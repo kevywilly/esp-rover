@@ -1,11 +1,11 @@
 #ifndef ROBOT_H
 #define ROBOT_H
 
-
-
 #include "esp_log.h"
 #include "driver/gpio.h"
 #include "include/robot/drivetrain.h"
+#include "globals.h"
+
 
 typedef enum {
     ROTATE_CCW = -1,
@@ -18,15 +18,13 @@ typedef struct {
     gpio_num_t led_pin;
 } robot_config_t;
 
+
 typedef struct {
     double heading;
     double power;
-}drive_request_t;
+    double turn;  // +/- peercentage
+} robot_move_t;
 
-typedef struct {
-    rotation_dir_t dir;
-    double power;
-}rotation_request_t;
 
 static const robot_config_t robot = {
         .drivetrain = {
@@ -42,46 +40,46 @@ static const robot_config_t robot = {
 static const float CW_ROTATION_MATRIX[4]  = {1.0, -1.0, -1.0, 1.0};
 static const float CCW_ROTATION_MATRIX[4] = {-1.0, 1.0, 1.0, -1.0};
 
-
 void robot_config(const robot_config_t *robot) {
     drivetrain_config(&robot->drivetrain);
 }
 
-void robot_drive(const robot_config_t *robot, drive_request_t request) {
-    ESP_LOGW(TAG, "Drive heading: %.2f%% for power: %.2f%%", request.heading, request.power);
+double _abs_max(double * values, int size) {
+    double max = 0;
+    for(int i=0; i < size; i++) {
+        if(fabs(values[i]) > max) {
+            max = fabs(values[i]);
+        }
+    }
+    return max;
+}
+void robot_move(const robot_config_t *robot, robot_move_t request) {
+    ESP_LOGW(TAG, "<Move heading: %2.f power: %2.f %%>", request.heading, request.power*100);
+    double max_val;
+    int i;
+    double adj;
+
     double radians = RADIANS*request.heading;
 
     double v1 = sin(radians + 0.25 * M_PI);// * request.power;
     double v2 = sin(radians - 0.25 * M_PI);// * request.power;
-    double dir1 = v1 < 0 ? -1 : 1;
-    double dir2 = v2 < 0 ? -1 : 1;
-    double diff_from_1 = fabs(v1) > fabs(v2) ? 1-fabs(v1) : 1 - fabs(v2);
 
-    v1 += dir1*diff_from_1*request.power;
-    v2 += dir2*diff_from_1*request.power;
-    
-    for(int i=0; i < 4 ; i++)
-        drivetrain_motor_spin(&robot->drivetrain, i, ((i + 1) % 2 > 0) ? v1 : v2);
+    double values[4] = {v1,v2,v1,v2};
 
+
+    // level up factors so that max value of power factor based on heading is is 1
+    max_val = _abs_max(values, 4);
+    adj = max_val > 0 && max_val < 1 ? 1.0/max_val : 1.0;
+
+    for(i=0; i < 4; i++) {
+        values[i] = values[i] * adj * request.power + CW_ROTATION_MATRIX[i] * request.turn;;
+    }
+
+    // level down so that no values are > 1.0 for power
+    max_val = _abs_max(values, 4);
+    adj = max_val > 1.0 ? 1.0/max_val : 1.0;
+
+    for(i=0; i < 4 ; i++)
+        drivetrain_motor_spin(&robot->drivetrain, i, values[i]*adj);
 }
-
-void robot_rotate(const robot_config_t *robot, rotation_request_t request) {
-    ESP_LOGW(TAG, "Rotate: %d for power: %.2f%%", request.dir, request.power);
-    for(int i=0; i < 4 ; i++)
-        drivetrain_motor_spin(
-            &robot->drivetrain,
-            i, 
-            request.power * ((request.dir == ROTATE_CW) ? CW_ROTATION_MATRIX[i] : CCW_ROTATION_MATRIX[i])
-        );
-
-}
-
-void robot_stop(const robot_config_t *robot) {
-    ESP_LOGW(TAG, "Stop Robot Motion");
-    for(int i=0; i < 4 ; i++)
-        drivetrain_motor_spin(&robot->drivetrain, i, 0);
-
-}
-
-
 #endif

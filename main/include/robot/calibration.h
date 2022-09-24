@@ -99,7 +99,7 @@ static char * calibrate_motors(const robot_config_t *robot) {
         vTaskDelay(pdMS_TO_TICKS(CALIBRATION_PERIOD));
         calc_rpm();
     }
-    robot_stop(robot);
+    robot_move(robot, (robot_move_t){0,0,0});
 
     for(count=0; count < 4; count++) {
         gpio_isr_handler_remove(robot->drivetrain.enca[count]);
