@@ -68,24 +68,6 @@ menu "ESP Rover Pin Config"
     config M4_ENCA
             int "Motor 4 ENCA Pin"
             default 5
-
-# ENCB Pins
-
-    config M1_ENCB
-            int "Motor 1 ENCB pin"
-            default 13
-
-    config M2_ENCB
-            int "Motor 2 ENCB Pin"
-            default 35
-
-    config M3_ENCB
-            int "Motor 3 ENCB Pin"
-            default 19
-
-    config M4_ENCB
-            int "Motor 4 ENCB Pin"
-            default 17
 endmenu
 
 menu "ESP Rover Adjustment Factors"

@@ -28,13 +28,13 @@ typedef struct {
 
 static const robot_config_t robot = {
         .drivetrain = {
-                .in1 = {CONFIG_M1_IN1, CONFIG_M2_IN1, CONFIG_M3_IN1,  CONFIG_M4_IN1},
-                .in2 = {CONFIG_M1_IN2, CONFIG_M2_IN2, CONFIG_M3_IN2,  CONFIG_M4_IN2},
-                .pwm = {CONFIG_M1_PWM, CONFIG_M2_PWM, CONFIG_M3_PWM,  CONFIG_M4_PWM},
-                .enca = {CONFIG_M1_ENCA, CONFIG_M2_ENCA, CONFIG_M3_ENCA,  CONFIG_M4_ENCA},
-                .encb = {CONFIG_M1_ENCB, CONFIG_M2_ENCB, CONFIG_M3_ENCB,  CONFIG_M4_ENCB},
+                .in1 = {(gpio_num_t) CONFIG_M1_IN1, (gpio_num_t)CONFIG_M2_IN1, (gpio_num_t)CONFIG_M3_IN1,  (gpio_num_t)CONFIG_M4_IN1},
+                .in2 = {(gpio_num_t)CONFIG_M1_IN2, (gpio_num_t)CONFIG_M2_IN2, (gpio_num_t)CONFIG_M3_IN2,  (gpio_num_t)CONFIG_M4_IN2},
+                .pwm = {(gpio_num_t)CONFIG_M1_PWM, (gpio_num_t)CONFIG_M2_PWM, (gpio_num_t)CONFIG_M3_PWM,  (gpio_num_t)CONFIG_M4_PWM},
+                .enca = {(gpio_num_t)CONFIG_M1_ENCA, (gpio_num_t)CONFIG_M2_ENCA, (gpio_num_t)CONFIG_M3_ENCA,  (gpio_num_t)CONFIG_M4_ENCA},
                 .rpm_factor = {CONFIG_POWER_ADJUST1 / 100.0, CONFIG_POWER_ADJUST2 / 100.0, CONFIG_POWER_ADJUST3 / 100.0, CONFIG_POWER_ADJUST4 / 100.0}
-        }
+        },
+        .led_pin = GPIO_NUM_13
 };
 
 static const float CW_ROTATION_MATRIX[4]  = {1.0, -1.0, -1.0, 1.0};

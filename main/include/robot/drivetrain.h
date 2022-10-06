@@ -28,7 +28,6 @@ typedef struct {
     gpio_num_t in2[4];
     gpio_num_t pwm[4];
     gpio_num_t enca[4];
-    gpio_num_t encb[4];
     float rpm_factor[4];
 } drivetrain_config_t;
 
@@ -143,11 +142,11 @@ void drivetrain_motor_set_power(const drivetrain_config_t *drivetrain, int motor
 void drivetrain_config(const drivetrain_config_t * drivetrain) {
 
     uint64_t in1_in2_bit_mask = 0;
-    uint64_t enca_encb_bit_mask = 0;
+    uint64_t enca_bitmask = 0;
 
     for(int i=0; i < 4; i++) {
         in1_in2_bit_mask = (in1_in2_bit_mask | (1ULL << drivetrain->in1[i]) | (1ULL << drivetrain->in2[i]));
-        enca_encb_bit_mask = (enca_encb_bit_mask | (1ULL << drivetrain->enca[i]) | (1ULL << drivetrain->encb[i]));
+        enca_bitmask = (enca_bitmask | (1ULL << drivetrain->enca[i]));
     }
 
     // configure in1 and in2 pins
@@ -162,7 +161,7 @@ void drivetrain_config(const drivetrain_config_t * drivetrain) {
     // configure enc1 and ecb pins
     io_conf.intr_type = GPIO_INTR_POSEDGE;
     io_conf.mode = GPIO_MODE_INPUT;
-    io_conf.pin_bit_mask = enca_encb_bit_mask;
+    io_conf.pin_bit_mask = enca_bitmask;
     io_conf.pull_down_en = GPIO_PULLDOWN_ENABLE;
     io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
     gpio_config(&io_conf);

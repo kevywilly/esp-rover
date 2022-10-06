@@ -23,7 +23,7 @@
 #include <sys/param.h>
 
 
-static char * process_move_request(cJSON *root) {
+static char const* process_move_request(cJSON *root) {
     double heading = cJSON_GetObjectItem(root, CONFIG_HEADING_PARAM_NAME)->valuedouble;
     double power = cJSON_GetObjectItem(root, CONFIG_POWER_PARAM_NAME)->valuedouble;
     double turn = cJSON_GetObjectItem(root, CONFIG_TURN_PARAM_NAME)->valuedouble;
@@ -36,7 +36,7 @@ static char * process_move_request(cJSON *root) {
 
 
 
-static char * process_request(cJSON *root) {
+static char const* process_request(cJSON *root) {
     char * cmd = cJSON_GetObjectItem(root, CONFIG_CMD_PARAM_NAME)->valuestring;
 
     ESP_LOGI(TAG, "=========== %s ==========", cmd);

@@ -13,23 +13,43 @@
 // https://seamonsters-2605.github.io/archive/mecanum/
 // for turning [-1,1]sin(angle+1/4π) * magnitude + turn
 
-
-
 #include "robot/robot.h"
 #include "http/webserver.h"
 #include "globals.h"
 #include "driver/uart.h"
+
+#ifdef ARDUINO_ARCH_ESP32
+#include "esp32-hal-log.h"
+#endif
 
 #define ROVER_UART_PORT_NUM 2
 #define ROVER_UART_BAUD_RATE 115200
 #define ROVER_RXD 16
 #define ROVER_TXD 17
 #define BUF_SIZE 1024
-#define TOF_BYTE_COUNT 8
+#define TOF_DATA_LEN 3
+#define TOF_START_BYTE 0x10
 
+extern "C" {
+    void app_main(void);
+}
+
+static uint16_t distances[4] = {8191,8191,8191,8191};
+
+static int read_uart_with_blocking(uint8_t * buffer, size_t len) {
+
+    size_t buffered_len = 0;
+
+    while(buffered_len < 1) {
+        uart_get_buffered_data_len(ROVER_UART_PORT_NUM, &buffered_len);
+        vTaskDelay(pdMS_TO_TICKS(10));
+    }
+
+    return uart_read_bytes(ROVER_UART_PORT_NUM, buffer, len, 20 / portTICK_PERIOD_MS);
+
+}
 void xTofTask(void * args) {
-    /* Configure parameters of an UART driver,
-     * communication pins and install the driver */
+
     uart_config_t uart_config = {
             .baud_rate = ROVER_UART_BAUD_RATE,
             .data_bits = UART_DATA_8_BITS,
@@ -45,6 +65,7 @@ void xTofTask(void * args) {
     intr_alloc_flags = ESP_INTR_FLAG_IRAM;
 #endif
 
+
     ESP_ERROR_CHECK(uart_driver_install(ROVER_UART_PORT_NUM, BUF_SIZE * 2, 0, 0, NULL, intr_alloc_flags));
     ESP_ERROR_CHECK(uart_param_config(ROVER_UART_PORT_NUM, &uart_config));
     ESP_ERROR_CHECK(uart_set_pin(ROVER_UART_PORT_NUM, ROVER_TXD, ROVER_RXD, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
@@ -55,41 +76,31 @@ void xTofTask(void * args) {
 
     while (1) {
         // Read data from the UART
-        uint8_t data[TOF_BYTE_COUNT];
+        uint8_t start[0];
+        uint8_t data[TOF_DATA_LEN];
 
-        size_t sizet = 0;
-
-        while(sizet < TOF_BYTE_COUNT) {
-            uart_get_buffered_data_len(ROVER_UART_PORT_NUM, &sizet);
-            vTaskDelay(pdMS_TO_TICKS(50));
+        read_uart_with_blocking(start, 1);
+        if(start[0] == TOF_START_BYTE) {
+            int len = read_uart_with_blocking(data, TOF_DATA_LEN);
+            ESP_LOGI(TAG, "Read Measurement # %d:%d:%d", data[0], data[1], data[2]);
+            if(len == 3 && data[0] < 4) {
+                uint8_t tof_id = data[0];
+                uint16_t distance = (data[1] << 8) + data[2];
+                distances[tof_id] = distance;
+                ESP_LOGI(TAG, "Got measurement for tof # %d of %d", tof_id, distance);
+            }
         }
-
-        int len = uart_read_bytes(ROVER_UART_PORT_NUM, data, TOF_BYTE_COUNT, 20 / portTICK_RATE_MS);
-        // Write data back to the UART
-        //uart_write_bytes(ROVER_UART_PORT_NUM, (const char *) data, len);
-
-        if (len > 0) {
-            ESP_LOGI(TAG, "Got %d bytes", len);
-            uint16_t distances[4];
-            distances[0] = (data[0] << 8) + data[1];
-            distances[1] = (data[2] << 8) + data[3];
-            distances[2] = (data[4] << 8) + data[5];
-            distances[3] = (data[6] << 8) + data[7];
-
-            ESP_LOGI(TAG, "Measurement: %d, %d, %d, %d", distances[0], distances[1], distances[2], distances[3]);
-        }
-
+        vTaskDelay(pdMS_TO_TICKS(100));
     }
 
 }
 void vRobotTask(void * args) {
-    robot_move(&robot, (robot_move_t){.power = 1.0, .heading = 90.0, .turn = 0.0});
+    robot_move(&robot, (robot_move_t){.heading = 90.0,.power = 1.0,  .turn = 0.0});
     vTaskDelay(pdMS_TO_TICKS(2000));
-    robot_move(&robot, (robot_move_t){.power = 1.0, .heading = 90.0, .turn = 0.2});
+    robot_move(&robot, (robot_move_t){.heading = 90.0, .power = 1.0, .turn = 0.2});
     vTaskDelay(pdMS_TO_TICKS(2000));
-    robot_move(&robot, (robot_move_t){.power = 0, .heading = 0, .turn = 0.2});
+    robot_move(&robot, (robot_move_t){ .heading = 0, .power = 0, .turn = 0.2});
     vTaskDelay(portMAX_DELAY);
-
 }
 void app_main(void)
 {
@@ -104,7 +115,8 @@ void app_main(void)
     ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &connect_handler, &server));
     ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &disconnect_handler, &server));
 
-    xTaskCreate(xTofTask, "read tof", 2048, NULL, 2, NULL);
+    xTaskCreate(xTofTask, "read tof", 4096, NULL, 2, NULL);
+
     //xTaskCreate(vRobotTask, "run esp rover", 4096, NULL, 10, NULL);
     server = start_webserver();
 }

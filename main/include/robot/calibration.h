@@ -81,7 +81,7 @@ static void calc_rpm() {
 
 }
 
-static char * calibrate_motors(const robot_config_t *robot) {
+static char const* calibrate_motors(const robot_config_t *robot) {
     gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT);
 
     int count = 0;
@@ -89,7 +89,7 @@ static char * calibrate_motors(const robot_config_t *robot) {
         gpio_isr_handler_add(robot->drivetrain.enca[count], gpio_isr_handler, (void*) count);
     }
 
-    printf("Minimum free heap size: %d bytes\n", esp_get_minimum_free_heap_size());
+    //printf("Minimum free heap size: %d bytes\n", esp_get_minimum_free_heap_size());
 
     for(count = 0; count < 4; count++) {
         drivetrain_motor_spin(&robot->drivetrain, count, 1.0);
