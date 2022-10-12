@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "globals.h"
+#include "structs.h"
 
 #ifndef RADIANS
 #define RADIANS 0.0174533
@@ -15,21 +16,6 @@
 #define MOTOR_FORWARD {1,0}
 #define MOTOR_BACKWARD {0,1}
 #define MOTOR_STOPPED {0,0}
-
-#define ESP_INTR_FLAG_DEFAULT 0
-
-typedef struct {
-    int in1;
-    int in2;
-} motor_direction_t;
-
-typedef struct {
-    gpio_num_t in1[4];
-    gpio_num_t in2[4];
-    gpio_num_t pwm[4];
-    gpio_num_t enca[4];
-    float rpm_factor[4];
-} drivetrain_config_t;
 
 float drivetrain_motor_get_duty(const drivetrain_config_t *drivetrain, int motor_id);
 void drivetrain_motor_spin(const drivetrain_config_t *drivetrain, int motor_id, float power);
@@ -139,7 +125,7 @@ void drivetrain_motor_set_power(const drivetrain_config_t *drivetrain, int motor
  * 
  * @param drivetrain
  */
-void drivetrain_config(const drivetrain_config_t * drivetrain) {
+void drivetrain_init(const drivetrain_config_t * drivetrain) {
 
     uint64_t in1_in2_bit_mask = 0;
     uint64_t enca_bitmask = 0;

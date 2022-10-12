@@ -10,8 +10,8 @@
 #include "protocol_examples_common.h"
 #include "esp_tls_crypto.h"
 #include <esp_http_server.h>
-#include "robot/robot.h"
-#include "robot/calibration.h"
+#include "robot.h"
+#include "calibration.h"
 #include "esp_log.h"
 #include "esp_http_server.h"
 #include "esp_system.h"
@@ -21,7 +21,6 @@
 #include "cJSON.h"
 #include "docroot.h"
 #include <sys/param.h>
-
 
 static char const* process_move_request(cJSON *root) {
     double heading = cJSON_GetObjectItem(root, CONFIG_HEADING_PARAM_NAME)->valuedouble;
@@ -34,8 +33,6 @@ static char const* process_move_request(cJSON *root) {
     return "Processed DRIVE Request.";
 }
 
-
-
 static char const* process_request(cJSON *root) {
     char * cmd = cJSON_GetObjectItem(root, CONFIG_CMD_PARAM_NAME)->valuestring;
 
@@ -44,7 +41,8 @@ static char const* process_request(cJSON *root) {
    if(strcmp(cmd, CONFIG_MOVE_COMMAND) == 0) {
         return process_move_request(root);
     } else if(strcmp(cmd, CONFIG_CALIBRATE_COMMAND) == 0) {
-        return calibrate_motors(&robot);
+        calibrate_motors();
+        return "Calibrated motors";
     }
     ESP_LOGI(TAG, "=========== end %s ==========", cmd);
     return "Unknown api request was ignored.";

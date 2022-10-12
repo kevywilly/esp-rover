@@ -5,12 +5,13 @@
 #ifndef ESPROVER_CALIBRATION_H
 #define ESPROVER_CALIBRATION_H
 
-#include <stdio.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/queue.h"
+#include "structs.h"
+#include "globals.h"
+#include "drivetrain.h"
+#include "robot.h"
 
 #define CALIBRATION_PERIOD 1000
+#define ESP_INTR_FLAG_DEFAULT 0
 
 static int encoder1 = 0;
 static int encoder2 = 0;
@@ -81,31 +82,29 @@ static void calc_rpm() {
 
 }
 
-static char const* calibrate_motors(const robot_config_t *robot) {
+static void calibrate_motors() {
     gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT);
 
     int count = 0;
     for(count=0; count < 4; count++) {
-        gpio_isr_handler_add(robot->drivetrain.enca[count], gpio_isr_handler, (void*) count);
+        gpio_isr_handler_add(robot.drivetrain.enca[count], gpio_isr_handler, (void*) count);
     }
 
     //printf("Minimum free heap size: %d bytes\n", esp_get_minimum_free_heap_size());
 
     for(count = 0; count < 4; count++) {
-        drivetrain_motor_spin(&robot->drivetrain, count, 1.0);
+        drivetrain_motor_spin(&robot.drivetrain, count, 1.0);
     }
 
     for(count=0;count<5;count++){
         vTaskDelay(pdMS_TO_TICKS(CALIBRATION_PERIOD));
         calc_rpm();
     }
-    robot_move(robot, (robot_move_t){0,0,0});
+    robot_move(&robot, (robot_move_t){0,0,0});
 
     for(count=0; count < 4; count++) {
-        gpio_isr_handler_remove(robot->drivetrain.enca[count]);
+        gpio_isr_handler_remove(robot.drivetrain.enca[count]);
     }
-
-    return "Calibration complete.";
 
 }
 #endif //ESPROVER_CALIBRATION_H
