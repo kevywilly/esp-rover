@@ -10,11 +10,13 @@
 #include "structs.h"
 
 static const char *TAG = "ESP Rover";
-static bool auto_mode = false;
+static bool auto_mode = true;
 static httpd_handle_t server = NULL;
 static const float ROTATION_MATRIX[4]  = {1.0, -1.0, -1.0, 1.0};
 
 static uint16_t distances[4] = {8191,8191,8191, 8191};
+static uint16_t recommended_heading = 90;
+
 static  const robot_config_t robot = {
         .drivetrain = {
                 .in1 = {(gpio_num_t) CONFIG_M1_IN1, (gpio_num_t)CONFIG_M2_IN1, (gpio_num_t)CONFIG_M3_IN1,  (gpio_num_t)CONFIG_M4_IN1},

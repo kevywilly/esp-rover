@@ -44,6 +44,7 @@ void app_main(void)
     robot_init();
 
     xTaskCreate(vTOFTask, "read tof", 4096, NULL, 2, NULL);
+    xTaskCreate(vAutodriveTask, "auto drive", 4096, NULL, 3, NULL);
 
     //xTaskCreate(vRobotTask, "run esp rover", 4096, NULL, 10, NULL);
     start_webserver();
