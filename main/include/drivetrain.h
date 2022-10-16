@@ -9,19 +9,15 @@
 #include "globals.h"
 #include "structs.h"
 
-#define MOTOR_FORWARD {1,0}
-#define MOTOR_BACKWARD {0,1}
-#define MOTOR_STOPPED {0,0}
+void drivetrain_init(DrivetrainConfig *drivetrain);
 
-void drivetrain_init(drivetrain_config_t *drivetrain);
+float drivetrain_motor_get_duty(DrivetrainConfig *drivetrain, int motor_id);
 
-float drivetrain_motor_get_duty(drivetrain_config_t *drivetrain, int motor_id);
+void drivetrain_motor_spin(DrivetrainConfig *drivetrain, int motor_id, float power);
 
-void drivetrain_motor_spin(drivetrain_config_t *drivetrain, int motor_id, float power);
+void drivetrain_motor_set_dir(DrivetrainConfig *drivetrain, int motor_id, MotorDirection dir);
 
-void drivetrain_motor_set_dir(drivetrain_config_t *drivetrain, int motor_id, motor_direction_t dir);
-
-void drivetrain_motor_set_power(drivetrain_config_t *drivetrain, int motor_id, float power);
+void drivetrain_motor_set_power(DrivetrainConfig *drivetrain, int motor_id, float power);
 
 /**
  * @brief Spins a motor based on % power setting
@@ -30,9 +26,9 @@ void drivetrain_motor_set_power(drivetrain_config_t *drivetrain, int motor_id, f
  * @param motor_id:  0..3
  * @param power:  % power (+/-)
  */
-void drivetrain_motor_spin(drivetrain_config_t *drivetrain, int motor_id, float power) {
+void drivetrain_motor_spin(DrivetrainConfig *drivetrain, int motor_id, float power) {
 
-    motor_direction_t dir = {0, 0};
+    MotorDirection dir = {0, 0};
 
     if (power > 0) {
         dir.in1 = 1;
@@ -52,14 +48,14 @@ void drivetrain_motor_spin(drivetrain_config_t *drivetrain, int motor_id, float 
  * @param motor: motor id 0..3 
  * @param dir: reverse, forward, stopped
  */
-void drivetrain_motor_set_dir(drivetrain_config_t *drivetrain, int motor_id, motor_direction_t dir) {
+void drivetrain_motor_set_dir(DrivetrainConfig *drivetrain, int motor_id, MotorDirection dir) {
     ESP_LOGW(TAG, "Setting direction {%d, %d} for motor %d", dir.in1, dir.in2, motor_id);
 
     gpio_set_level(drivetrain->in1[motor_id], dir.in1);
     gpio_set_level(drivetrain->in2[motor_id], dir.in2);
 }
 
-float drivetrain_motor_get_duty(drivetrain_config_t *drivetrain, int motor_id) {
+float drivetrain_motor_get_duty(DrivetrainConfig *drivetrain, int motor_id) {
     float duty = mcpwm_get_duty(
             PWM_PARAMS[motor_id].unit,
             PWM_PARAMS[motor_id].timer,
@@ -74,7 +70,7 @@ float drivetrain_motor_get_duty(drivetrain_config_t *drivetrain, int motor_id) {
  * @param motor_id: motor id 0..3
  * @param power: % of max duty cycle
  */
-void drivetrain_motor_set_power(drivetrain_config_t *drivetrain, int motor_id, float power) {
+void drivetrain_motor_set_power(DrivetrainConfig *drivetrain, int motor_id, float power) {
     ESP_LOGW(TAG, "Setting power %.2f%% for motor %d", power * 100, motor_id);
 
     double duty = power * 99.0;
@@ -97,7 +93,7 @@ void drivetrain_motor_set_power(drivetrain_config_t *drivetrain, int motor_id, f
  * 
  * @param drivetrain
  */
-void drivetrain_init(drivetrain_config_t *drivetrain) {
+void drivetrain_init(DrivetrainConfig *drivetrain) {
 
     uint64_t in1_in2_bit_mask = 0;
     //uint64_t enca_bitmask = 0;

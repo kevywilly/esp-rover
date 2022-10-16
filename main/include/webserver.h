@@ -10,8 +10,6 @@
 #include "protocol_examples_common.h"
 #include "esp_tls_crypto.h"
 #include <esp_http_server.h>
-#include "robot.h"
-#include "calibration.h"
 #include "esp_log.h"
 #include "esp_http_server.h"
 #include "esp_system.h"
@@ -21,36 +19,42 @@
 #include "cJSON.h"
 #include "docroot.h"
 #include <sys/param.h>
+#include "freertos/queue.h"
 
-static char const *process_move_request(cJSON *root) {
-    double heading = cJSON_GetObjectItem(root, CONFIG_HEADING_PARAM_NAME)->valuedouble;
-    double power = cJSON_GetObjectItem(root, CONFIG_POWER_PARAM_NAME)->valuedouble;
-    double turn = cJSON_GetObjectItem(root, CONFIG_TURN_PARAM_NAME)->valuedouble;
-
-    ESP_LOGI(TAG, "Received Command: <Move heading = %f, power = %f, turn = %f>", heading, power, turn);
-    //drive_request_t req = {.heading = heading, .power = power}
-    robot_move(&Robot, (robot_move_t) {.heading = heading, .power = power, .turn = turn});
-    return "Processed DRIVE Request.";
+static esp_err_t process_move_request(cJSON *root) {
+    float heading = cJSON_GetObjectItem(root, CONFIG_HEADING_PARAM_NAME)->valuedouble;
+    float power = cJSON_GetObjectItem(root, CONFIG_POWER_PARAM_NAME)->valuedouble;
+    float turn = cJSON_GetObjectItem(root, CONFIG_TURN_PARAM_NAME)->valuedouble;
+    DriveCommand cmd = {.power = power, .heading = heading, .turn = turn};
+    xQueueSend(drive_queue, &cmd, 10);
+    return ESP_OK;
 }
 
-static char const *process_request(cJSON *root) {
-    char *cmd = cJSON_GetObjectItem(root, CONFIG_CMD_PARAM_NAME)->valuestring;
+static esp_err_t process_auto_mode() {
+    uint8_t cmd = 1;
+    DriveCommand dt = {.power = 0, .heading = 0, .turn = 0};
+    xQueueSend(auto_mode_queue, &cmd, 10);
+    xQueueSend(drive_queue, &dt, 10);
+    return ESP_OK;
+}
 
-    ESP_LOGI(TAG, "=========== %s ==========", cmd);
+static esp_err_t process_request(cJSON *root) {
+    char *cmd = cJSON_GetObjectItem(root, CONFIG_CMD_PARAM_NAME)->valuestring;
 
     if (strcmp(cmd, CONFIG_MOVE_COMMAND) == 0) {
         return process_move_request(root);
-    } else if (strcmp(cmd, CONFIG_CALIBRATE_COMMAND) == 0) {
-        calibrate_motors();
-        return "Calibrated motors";
+    } else if(strcmp(cmd, CONFIG_AUTO_DRIVE_COMMAND) == 0) {
+        return process_auto_mode();
     }
-    ESP_LOGI(TAG, "=========== end %s ==========", cmd);
-    return "Unknown api request was ignored.";
+    return ESP_OK;
 }
+
 
 /* An HTTP GET handler */
 static esp_err_t home_get_handler(httpd_req_t *req) {
-    httpd_resp_send(req, docroot, HTTPD_RESP_USE_STRLEN);
+    httpd_resp_set_type(req, "text/html");
+    httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
+    httpd_resp_send(req, (const char *)DOCROOT, DOCROOT_LEN);
     return ESP_OK;
 }
 
@@ -81,12 +85,17 @@ static esp_err_t api_post_handler(httpd_req_t *req) {
     }
 
     cJSON *root = cJSON_Parse(buf);
-    process_request(root);
+    ESP_ERROR_CHECK(process_request(root));
     cJSON_Delete(root);
 
-    // End response
-    //httpd_resp_sendstr(req, resp);
-    httpd_resp_send_chunk(req, NULL, 0);
+    httpd_resp_set_type(req, "application/json");
+    cJSON *r = cJSON_CreateObject();
+    cJSON_AddStringToObject(r, "status", "ok");
+    const char *resp = cJSON_Print(r);
+    httpd_resp_sendstr(req, resp);
+    free((void *)resp);
+    cJSON_Delete(r);
+
     return ESP_OK;
 }
 

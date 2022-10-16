@@ -41,7 +41,7 @@ static int uart_read_with_blocking(uint8_t *buffer, size_t len) {
 
     while (buffered_len < len) {
         uart_get_buffered_data_len(ROVER_UART_PORT_NUM, &buffered_len);
-        vTaskDelay(pdMS_TO_TICKS(10));
+        vTaskDelay(pdMS_TO_TICKS(50));
     }
 
     return uart_read_bytes(ROVER_UART_PORT_NUM, buffer, len, 20 / portTICK_PERIOD_MS);

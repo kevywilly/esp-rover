@@ -10,7 +10,7 @@
 typedef struct {
     int in1;
     int in2;
-} motor_direction_t;
+} MotorDirection;
 
 typedef struct {
     gpio_num_t in1[4];
@@ -18,24 +18,31 @@ typedef struct {
     gpio_num_t pwm[4];
     //gpio_num_t enca[4];
     float rpm_factor[4];
-} drivetrain_config_t;
+} DrivetrainConfig;
 
 typedef struct {
-    drivetrain_config_t drivetrain;
+    DrivetrainConfig drivetrain;
     gpio_num_t led_pin;
-} robot_config_t;
+} RobotConfig;
 
 typedef struct {
     float heading;
     float power;
     float turn;  // +/- percentage
-} robot_move_t;
+} DriveCommand;
+
+typedef struct {
+    uint16_t front;
+    uint16_t left;
+    uint16_t right;
+    uint16_t back;
+} TOFMeasurement;
 
 typedef struct {
     mcpwm_unit_t unit;
     mcpwm_timer_t timer;
     mcpwm_generator_t generator;
     mcpwm_io_signals_t signal;
-} pwm_params_t;
+} PWMParams;
 
 #endif //ESPROVER_STRUCTS_H

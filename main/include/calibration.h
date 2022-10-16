@@ -82,7 +82,8 @@ static void calc_rpm() {
 
 }
 
-static void calibrate_motors() {
+static esp_err_t calibrate_motors() {
+    return ESP_OK;
     /*
     gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT);
 

@@ -20,7 +20,7 @@ double _abs_max(double *values, int size) {
     return max;
 }
 
-void robot_move(robot_config_t *robot, robot_move_t request) {
+void robot_move(RobotConfig *robot, DriveCommand request) {
     ESP_LOGW(TAG, "<Move heading: %2.f power: %2.f %%>", request.heading, request.power * 100);
     double max_val;
     int i;

@@ -7,6 +7,7 @@
 
 #include "globals.h"
 #include "uart.h"
+#include "freertos/task.h"
 
 
 #define TOF_DATA_LEN 8
@@ -14,7 +15,10 @@
 #define TOF_THRESHOLD1 300.0
 #define TOF_THRESHOLD2 1000.0
 
-static robot_move_t tof_recommend(uint16_t * distances) {
+static DriveCommand tof_recommend(uint16_t * distances) {
+
+    DriveCommand cmd;
+
     uint16_t r = distances[0];
     uint16_t f = distances[1];
     uint16_t l = distances[2];
@@ -29,11 +33,13 @@ static robot_move_t tof_recommend(uint16_t * distances) {
     float power = 0;
     float g0 = 0;
 
+    // forward motion
     if(f > TOF_THRESHOLD1) {
         g0++;
         forward = f / TOF_THRESHOLD2;
     }
 
+    // left / right motion
     if((r > TOF_THRESHOLD1) && (r > l)) {
         right = r/TOF_THRESHOLD2;
         left = 0;
@@ -57,46 +63,68 @@ static robot_move_t tof_recommend(uint16_t * distances) {
         power = power > 1.0 ? 1.0 : power;
     }
 
-    /*
-    printf("f %d : r %d : l %d : b %d\n", f, r, l, b);
-    printf("forward %f : right %f : left %f : back %f : turn %f\n", forward, right, left, back, spin);
-    printf("power %f heading %f turn %f\n\n", power, heading, spin);
-    */
+    return (DriveCommand){.power = power, .heading = heading, .turn = spin};
 
-    return (robot_move_t){.power = power, .heading = heading, .turn = spin};
 
 }
+
+static bool cmdEqual(DriveCommand c1, DriveCommand c2) {
+    if(fabs(c1.power - c2.power) > 0.1)
+        return false;
+    if(fabs(c1.heading - c2.heading) > 0.1)
+        return false;
+    if(fabs(c1.turn - c2.turn) > 0.1)
+        return false;
+    return true;
+}
+
 void vTOFTask(void *args) {
 
+    uint16_t distances[4] = {0,0,0,0};
+    bool auto_mode = false;
+    uint8_t mode_request = 0;
+    DriveCommand cmd = (DriveCommand){.heading = 0, .power = 0, .turn = 0};
+
     while (true) {
-        // Read data from the UART
-        uint8_t start[0];
-        uint8_t data[TOF_DATA_LEN] = {0, 0, 0, 0, 0, 0, 0, 0};
+        if(xQueueReceive(auto_mode_queue, (void *)&mode_request, 0) == pdTRUE) {
+            auto_mode = !auto_mode;
+            ESP_LOGI(TAG, "Got auto mode: %d", auto_mode);
+        }
+
+            // Read data from the UART
+        uint8_t start[1] = {0};
+        uint8_t data[TOF_DATA_LEN];
+        memset(data, 0, TOF_DATA_LEN);
 
         uart_read_with_blocking(start, 1);
 
         if (start[0] == TOF_START_BYTE) {
-            int len = uart_read_with_blocking(data, TOF_DATA_LEN);
-            if (len == TOF_DATA_LEN && data[0] < 4) {
+            if (uart_read_with_blocking(data, TOF_DATA_LEN) == TOF_DATA_LEN) {
                 uint8_t *p = data;
                 uint8_t b1, b2;
                 for (int i = 0; i < 4; i++) {
                     b1 = *p++;
                     b2 = *p++;
-                    tof_distances[i] = (b1 << 8) + b2;
-                    //ESP_LOGI(TAG, "<TOF id: %d distance: %d>", i, tof_distances[i]);
+                    distances[i] = (b1 << 8) + b2;
+                    //ESP_LOGI(TAG, "<TOF id: %d distance: %d>", i, distances[i]);
                 }
             }
         }
 
-       tof_recommended_move = tof_recommend(tof_distances);
-       ESP_LOGI(TAG, "<rec move power = %f heading m= %f turn = %f>",
-                 tof_recommended_move.power,
-                 tof_recommended_move.heading,
-                 tof_recommended_move.turn
-                 );
+        DriveCommand newCmd = tof_recommend(distances);
 
-        
+        if(!cmdEqual(newCmd, cmd)) {
+            cmd = newCmd;
+            ESP_LOGI(TAG, "<rec move power = %f heading m= %f turn = %f>",
+                     cmd.power,
+                     cmd.heading,
+                     cmd.turn
+            );
+
+            if (auto_mode) {
+                xQueueSend(drive_queue, &cmd, 10);
+            }
+        }
         vTaskDelay(pdMS_TO_TICKS(100));
     }
 

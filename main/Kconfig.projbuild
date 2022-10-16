@@ -70,6 +70,9 @@ menu "ESP Rover Config"
     endmenu
 
     menu "ESP Rover Commands and Parameters"
+        config AUTO_DRIVE_COMMAND
+            string "auto"
+            default "auto"
         config DRIVE_COMMAND
             string "Drive command"
             default "drive"
