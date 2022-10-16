@@ -5,3 +5,4 @@ cmake-build*
 export
 .vscode
 .devcontainer
+.DS_Store

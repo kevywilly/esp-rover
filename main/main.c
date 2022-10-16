@@ -21,12 +21,12 @@
 #include "uart.h"
 #include "tof.h"
 #include "webserver.h"
-#include "autodrive.h"
 
+/*
 extern "C" {
     void app_main(void);
 }
-
+*/
 void init_network() {
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_netif_init());
@@ -36,15 +36,13 @@ void init_network() {
     ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &disconnect_handler, &server));
 }
 
-void app_main(void)
-{
+void app_main(void) {
 
     init_network();
     uart_init();
     robot_init();
 
     xTaskCreate(vTOFTask, "read tof", 4096, NULL, 2, NULL);
-    xTaskCreate(vAutodriveTask, "auto drive", 4096, NULL, 3, NULL);
 
     //xTaskCreate(vRobotTask, "run esp rover", 4096, NULL, 10, NULL);
     start_webserver();

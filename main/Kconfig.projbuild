@@ -1,133 +1,112 @@
-menu "ESP Rover Pin Config"
+menu "ESP Rover Config"
+    menu "ESP Rover Pin Config"
+        config M1_IN1
+                int "Motor 1 Input 1 Pin"
+                default 14
 
-# Input 1 Pinst
-    config M1_IN1
-            int "Motor 1 Input 1 Pin"
-            default 14
+        config M1_IN2
+                int "Motor 1 Input 2 Pin"
+                default 12
 
-    config M2_IN1
-            int "Motor 2 Input 1 Pin"
-            default 16
+        config M1_PWM
+               int "Motor 1 PWM pin"
+               default 27
 
-    config M3_IN1
-                int "Motor 3 Input 1 Pin"
-                default 21
+        config M2_IN1
+                int "Motor 2 Input 1 Pin"
+                default 16
 
-    config M4_IN1
-                int "Motor 4 Input 1 Pin"
-                default 0
-# Input 2 pins
+        config M2_IN2
+                    int "Motor 2 Input 2 Pin"
+                    default 25
 
-    config M1_IN2
-            int "Motor 1 Input 2 Pin"
-            default 12
+        config M2_PWM
+                    int "Motor 2 PWM Pin"
+                    default 33
 
-    config M2_IN2
-            int "Motor 2 Input 2 Pin"
-            default 25
+        config M3_IN1
+                    int "Motor 3 Input 1 Pin"
+                    default 21
 
-    config M3_IN2
-            int "Motor 3 Input 2 Pin"
-            default 22
+        config M3_IN2
+                    int "Motor 3 Input 2 Pin"
+                    default 22
 
-    config M4_IN2
-            int "Motor 4 Input 2 Pin"
-            default 15
+        config M3_PWM
+                    int "Motor 3 PWM Pin"
+                    default 23
 
-# PWM Pins
-    config M1_PWM
-            int "Motor 1 PWM pin"
-            default 27
+        config M4_IN1
+                    int "Motor 4 Input 1 Pin"
+                    default 0
 
-    config M2_PWM
-            int "Motor 2 PWM Pin"
-            default 33
+        config M4_IN2
+                int "Motor 4 Input 2 Pin"
+                default 15
 
-    config M3_PWM
-            int "Motor 3 PWM Pin"
-            default 23
+        config M4_PWM
+                int "Motor 4 PWM Pin"
+                default 4
+    endmenu
 
-    config M4_PWM
-            int "Motor 4 PWM Pin"
-            default 4
-                
-# ENCA Pins
+    menu "ESP Rover Adjustment Factors"
 
-    config M1_ENCA
-            int "Motor 1 ENCA pin"
-            default 32
+        config POWER_ADJUST1
+                int "Motor 2 Power Adjustment Factor"
+                default 90
 
-    config M2_ENCA
-            int "Motor 2 ENCA Pin"
-            default 34
+        config POWER_ADJUST2
+                int "Motor 2 Power Adjustment Factor"
+                default 87
 
-    config M3_ENCA
-            int "Motor 3 ENCA Pin"
-            default 18
+        config POWER_ADJUST3
+                int "Motor 3 Power Adjustment Factor"
+                default 84
 
-    config M4_ENCA
-            int "Motor 4 ENCA Pin"
-            default 5
-endmenu
+        config POWER_ADJUST4
+                int "Motor 4 Power Adjustment Factor"
+                default 81
 
-menu "ESP Rover Adjustment Factors"
-# Power Ajustment Pins
+    endmenu
 
-    config POWER_ADJUST1
-            int "Motor 1 Power Adjustment Factor"
-            default 100
+    menu "ESP Rover Commands and Parameters"
+        config DRIVE_COMMAND
+            string "Drive command"
+            default "drive"
 
-    config POWER_ADJUST2
-            int "Motor 2 Power Adjustment Factor"
-            default 87
+        config MOVE_COMMAND
+                string "MOVE command"
+                default "move"
 
-    config POWER_ADJUST3
-            int "Motor 3 Power Adjustment Factor"
-            default 84
+        config STOP_COMMAND
+            string "Stop command"
+            default "stop"
 
-    config POWER_ADJUST4
-            int "Motor 4 Power Adjustment Factor"
-            default 81
+        config ROTATE_COMMAND
+            string "Rotate command"
+            default "rotate"
 
-endmenu
+        config CALIBRATE_COMMAND
+                string "Calibration command"
+                default "calibrate"
 
-menu "ESP Rover Commands and Parameters"
-    config DRIVE_COMMAND
-        string "Drive command"
-        default "drive"
+        config CMD_PARAM_NAME
+            string "Parameter used for command"
+            default "cmd"
 
-    config MOVE_COMMAND
-            string "MOVE command"
-            default "move"
+        config HEADING_PARAM_NAME
+            string "Parameter used for heading setting"
+            default "heading"
 
-    config STOP_COMMAND
-        string "Stop command"
-        default "stop"
+        config POWER_PARAM_NAME
+            string "Parameter used for power setting"
+            default "power"
 
-    config ROTATE_COMMAND
-        string "Rotate command"
-        default "rotate"
+        config TURN_PARAM_NAME
+            string "Parameter used for turn setting"
+            default "turn"
 
-    config CALIBRATE_COMMAND
-            string "Calibration command"
-            default "calibrate"
-
-    config CMD_PARAM_NAME
-        string "Parameter used for command"
-        default "cmd"
-
-    config HEADING_PARAM_NAME
-        string "Parameter used for heading setting"
-        default "heading"
-
-    config POWER_PARAM_NAME
-        string "Parameter used for power setting"
-        default "power"
-
-    config TURN_PARAM_NAME
-        string "Parameter used for turn setting"
-        default "turn"
-
+    endmenu
 endmenu
 # IN1_PINS   {GPIO_NUM_14, GPIO_NUM_16, GPIO_NUM_21,  GPIO_NUM_0}
 # IN2_PINS   {GPIO_NUM_12, GPIO_NUM_25, GPIO_NUM_22, GPIO_NUM_15}

@@ -16,7 +16,7 @@ typedef struct {
     gpio_num_t in1[4];
     gpio_num_t in2[4];
     gpio_num_t pwm[4];
-    gpio_num_t enca[4];
+    //gpio_num_t enca[4];
     float rpm_factor[4];
 } drivetrain_config_t;
 
@@ -26,10 +26,16 @@ typedef struct {
 } robot_config_t;
 
 typedef struct {
-    double heading;
-    double power;
-    double turn;  // +/- percentage
+    float heading;
+    float power;
+    float turn;  // +/- percentage
 } robot_move_t;
 
+typedef struct {
+    mcpwm_unit_t unit;
+    mcpwm_timer_t timer;
+    mcpwm_generator_t generator;
+    mcpwm_io_signals_t signal;
+} pwm_params_t;
 
 #endif //ESPROVER_STRUCTS_H

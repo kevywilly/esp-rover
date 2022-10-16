@@ -22,25 +22,25 @@
 #include "docroot.h"
 #include <sys/param.h>
 
-static char const* process_move_request(cJSON *root) {
+static char const *process_move_request(cJSON *root) {
     double heading = cJSON_GetObjectItem(root, CONFIG_HEADING_PARAM_NAME)->valuedouble;
     double power = cJSON_GetObjectItem(root, CONFIG_POWER_PARAM_NAME)->valuedouble;
     double turn = cJSON_GetObjectItem(root, CONFIG_TURN_PARAM_NAME)->valuedouble;
 
     ESP_LOGI(TAG, "Received Command: <Move heading = %f, power = %f, turn = %f>", heading, power, turn);
     //drive_request_t req = {.heading = heading, .power = power}
-    robot_move(&robot, (robot_move_t){.heading = heading, .power = power, .turn = turn});
+    robot_move(&Robot, (robot_move_t) {.heading = heading, .power = power, .turn = turn});
     return "Processed DRIVE Request.";
 }
 
-static char const* process_request(cJSON *root) {
-    char * cmd = cJSON_GetObjectItem(root, CONFIG_CMD_PARAM_NAME)->valuestring;
+static char const *process_request(cJSON *root) {
+    char *cmd = cJSON_GetObjectItem(root, CONFIG_CMD_PARAM_NAME)->valuestring;
 
     ESP_LOGI(TAG, "=========== %s ==========", cmd);
 
-   if(strcmp(cmd, CONFIG_MOVE_COMMAND) == 0) {
+    if (strcmp(cmd, CONFIG_MOVE_COMMAND) == 0) {
         return process_move_request(root);
-    } else if(strcmp(cmd, CONFIG_CALIBRATE_COMMAND) == 0) {
+    } else if (strcmp(cmd, CONFIG_CALIBRATE_COMMAND) == 0) {
         calibrate_motors();
         return "Calibrated motors";
     }
@@ -49,8 +49,7 @@ static char const* process_request(cJSON *root) {
 }
 
 /* An HTTP GET handler */
-static esp_err_t home_get_handler(httpd_req_t *req)
-{
+static esp_err_t home_get_handler(httpd_req_t *req) {
     httpd_resp_send(req, docroot, HTTPD_RESP_USE_STRLEN);
     return ESP_OK;
 }
@@ -92,8 +91,7 @@ static esp_err_t api_post_handler(httpd_req_t *req) {
 }
 
 
-static httpd_handle_t start_webserver()
-{
+static httpd_handle_t start_webserver() {
     httpd_handle_t server = NULL;
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.lru_purge_enable = true;
@@ -126,16 +124,14 @@ static httpd_handle_t start_webserver()
     return NULL;
 }
 
-static void stop_webserver(httpd_handle_t server)
-{
+static void stop_webserver(httpd_handle_t server) {
     // Stop the httpd server
     httpd_stop(server);
 }
 
-static void disconnect_handler(void* arg, esp_event_base_t event_base,
-                               int32_t event_id, void* event_data)
-{
-    httpd_handle_t* server = (httpd_handle_t*) arg;
+static void disconnect_handler(void *arg, esp_event_base_t event_base,
+                               int32_t event_id, void *event_data) {
+    httpd_handle_t *server = (httpd_handle_t *) arg;
     if (*server) {
         ESP_LOGI(TAG, "Stopping webserver");
         stop_webserver(*server);
@@ -143,10 +139,9 @@ static void disconnect_handler(void* arg, esp_event_base_t event_base,
     }
 }
 
-static void connect_handler(void* arg, esp_event_base_t event_base,
-                            int32_t event_id, void* event_data)
-{
-    httpd_handle_t* server = (httpd_handle_t*) arg;
+static void connect_handler(void *arg, esp_event_base_t event_base,
+                            int32_t event_id, void *event_data) {
+    httpd_handle_t *server = (httpd_handle_t *) arg;
     if (*server == NULL) {
         ESP_LOGI(TAG, "Starting webserver");
         *server = start_webserver();
