@@ -1,71 +1,71 @@
 menu "ESP Rover Config"
     menu "ESP Rover Pin Config"
-        config M1_IN1
-                int "Motor 1 Input 1 Pin"
+        config M0_IN1
+                int "Motor 0 Input 1 Pin"
                 default 14
 
-        config M1_IN2
-                int "Motor 1 Input 2 Pin"
+        config M0_IN2
+                int "Motor 0 Input 2 Pin"
                 default 12
 
-        config M1_PWM
-               int "Motor 1 PWM pin"
+        config M0_PWM
+               int "Motor 0 PWM pin"
                default 27
 
-        config M2_IN1
-                int "Motor 2 Input 1 Pin"
+        config M1_IN1
+                int "Motor 1 Input 1 Pin"
                 default 16
+
+        config M1_IN2
+                    int "Motor 1 Input 2 Pin"
+                    default 25
+
+        config M1_PWM
+                    int "Motor 1 PWM Pin"
+                    default 33
+
+        config M2_IN1
+                    int "Motor 2 Input 1 Pin"
+                    default 21
 
         config M2_IN2
                     int "Motor 2 Input 2 Pin"
-                    default 25
+                    default 22
 
         config M2_PWM
                     int "Motor 2 PWM Pin"
-                    default 33
+                    default 23
 
         config M3_IN1
                     int "Motor 3 Input 1 Pin"
-                    default 21
-
-        config M3_IN2
-                    int "Motor 3 Input 2 Pin"
-                    default 22
-
-        config M3_PWM
-                    int "Motor 3 PWM Pin"
-                    default 23
-
-        config M4_IN1
-                    int "Motor 4 Input 1 Pin"
                     default 0
 
-        config M4_IN2
-                int "Motor 4 Input 2 Pin"
+        config M3_IN2
+                int "Motor 3 Input 2 Pin"
                 default 15
 
-        config M4_PWM
-                int "Motor 4 PWM Pin"
+        config M3_PWM
+                int "Motor 3 PWM Pin"
                 default 4
     endmenu
 
     menu "ESP Rover Adjustment Factors"
 
+        config POWER_ADJUST0
+                int "Motor 0 Power Adjustment Factor"
+                default 100
+
         config POWER_ADJUST1
-                int "Motor 2 Power Adjustment Factor"
-                default 90
+                int "Motor 1 Power Adjustment Factor"
+                default 100
 
         config POWER_ADJUST2
                 int "Motor 2 Power Adjustment Factor"
-                default 87
+                default 100
 
         config POWER_ADJUST3
                 int "Motor 3 Power Adjustment Factor"
-                default 84
-
-        config POWER_ADJUST4
-                int "Motor 4 Power Adjustment Factor"
-                default 81
+                default 100
 
     endmenu
 

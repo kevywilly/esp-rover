@@ -22,9 +22,9 @@
 #include "freertos/queue.h"
 
 static esp_err_t process_move_request(cJSON *root) {
-    float heading = cJSON_GetObjectItem(root, CONFIG_HEADING_PARAM_NAME)->valuedouble;
-    float power = cJSON_GetObjectItem(root, CONFIG_POWER_PARAM_NAME)->valuedouble;
-    float turn = cJSON_GetObjectItem(root, CONFIG_TURN_PARAM_NAME)->valuedouble;
+    double heading = cJSON_GetObjectItem(root, CONFIG_HEADING_PARAM_NAME)->valuedouble;
+    double power = cJSON_GetObjectItem(root, CONFIG_POWER_PARAM_NAME)->valuedouble;
+    double turn = cJSON_GetObjectItem(root, CONFIG_TURN_PARAM_NAME)->valuedouble;
     DriveCommand cmd = {.power = power, .heading = heading, .turn = turn};
     xQueueSend(drive_queue, &cmd, 10);
     return ESP_OK;

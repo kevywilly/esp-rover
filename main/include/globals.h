@@ -16,7 +16,7 @@
 static const char *TAG = "ESP Rover";
 
 static httpd_handle_t server = NULL;
-static const float ROTATION_MATRIX[4] = {1.0, -1.0, -1.0, 1.0};
+static const double ROTATION_MATRIX[4] = {1.0, -1.0, -1.0, 1.0};
 static const int drive_queue_len = 5;
 static const int auto_mode_queue_len = 2;
 static QueueHandle_t drive_queue;
@@ -31,15 +31,13 @@ static const PWMParams PWM_PARAMS[4] = {
 
 static RobotConfig Robot = {
         .drivetrain = {
-                .in1 = {(gpio_num_t) CONFIG_M1_IN1, (gpio_num_t) CONFIG_M2_IN1, (gpio_num_t) CONFIG_M3_IN1,
-                        (gpio_num_t) CONFIG_M4_IN1},
-                .in2 = {(gpio_num_t) CONFIG_M1_IN2, (gpio_num_t) CONFIG_M2_IN2, (gpio_num_t) CONFIG_M3_IN2,
-                        (gpio_num_t) CONFIG_M4_IN2},
-                .pwm = {(gpio_num_t) CONFIG_M1_PWM, (gpio_num_t) CONFIG_M2_PWM, (gpio_num_t) CONFIG_M3_PWM,
-                        (gpio_num_t) CONFIG_M4_PWM},
+                .in1 = {(gpio_num_t) CONFIG_M0_IN1, (gpio_num_t) CONFIG_M1_IN1, (gpio_num_t) CONFIG_M2_IN1,
+                        (gpio_num_t) CONFIG_M3_IN1},
+                .in2 = {(gpio_num_t) CONFIG_M0_IN2, (gpio_num_t) CONFIG_M1_IN2, (gpio_num_t) CONFIG_M2_IN2, (gpio_num_t) CONFIG_M3_IN2},
+                .pwm = {(gpio_num_t) CONFIG_M0_PWM,(gpio_num_t) CONFIG_M1_PWM, (gpio_num_t) CONFIG_M2_PWM, (gpio_num_t) CONFIG_M3_PWM},
                 //.enca = {(gpio_num_t)CONFIG_M1_ENCA, (gpio_num_t)CONFIG_M2_ENCA, (gpio_num_t)CONFIG_M3_ENCA,  (gpio_num_t)CONFIG_M4_ENCA},
-                .rpm_factor = {CONFIG_POWER_ADJUST1 / 100.0, CONFIG_POWER_ADJUST2 / 100.0, CONFIG_POWER_ADJUST3 / 100.0,
-                               CONFIG_POWER_ADJUST4 / 100.0}
+                .rpm_factor = {CONFIG_POWER_ADJUST0 / 100.0, CONFIG_POWER_ADJUST1 / 100.0, CONFIG_POWER_ADJUST2 / 100.0,
+                               CONFIG_POWER_ADJUST3 / 100.0}
         },
         .led_pin = GPIO_NUM_13
 };

@@ -20,9 +20,9 @@ static int encoder4 = 0;
 
 static int rpms[4] = {0, 0, 0, 0};
 
-static float min_rpm = 0;
+static double min_rpm = 0;
 
-static float rpm_factors[4] = {1.0, 1.0, 1.0, 1.0};
+static double rpm_factors[4] = {1.0, 1.0, 1.0, 1.0};
 
 static void IRAM_ATTR gpio_isr_handler(void *arg) {
     int motor_num = (int) arg;
@@ -76,7 +76,7 @@ static void calc_rpm() {
     }
 
     printf("min_rpm: %f\n", min_rpm);
-    for (int i = 0; i < 4; i++) {
+    for (i = 0; i < 4; i++) {
         printf("rpm-%d: %d, adj_factor: %f\n", i, rpms[i], rpm_factors[i]);
     }
 

@@ -10,7 +10,7 @@ void robot_init() {
     drivetrain_init(&Robot.drivetrain);
 }
 
-double _abs_max(double *values, int size) {
+double abs_max(double *values, int size) {
     double max = 0;
     for (int i = 0; i < size; i++) {
         if (fabs(values[i]) > max) {
@@ -35,15 +35,15 @@ void robot_move(RobotConfig *robot, DriveCommand request) {
 
 
     // level up factors so that max value of power factor based on heading is is 1
-    max_val = _abs_max(values, 4);
+    max_val = abs_max(values, 4);
     adj = max_val > 0 && max_val < 1 ? 1.0 / max_val : 1.0;
 
     for (i = 0; i < 4; i++) {
-        values[i] = values[i] * adj * request.power + ROTATION_MATRIX[i] * request.turn;;
+        values[i] = values[i] * adj * request.power + ROTATION_MATRIX[i] * request.turn;
     }
 
     // level down so that no values are > 1.0 for power
-    max_val = _abs_max(values, 4);
+    max_val = abs_max(values, 4);
     adj = max_val > 1.0 ? 1.0 / max_val : 1.0;
 
     for (i = 0; i < 4; i++)

@@ -11,13 +11,11 @@
 
 void drivetrain_init(DrivetrainConfig *drivetrain);
 
-float drivetrain_motor_get_duty(DrivetrainConfig *drivetrain, int motor_id);
-
-void drivetrain_motor_spin(DrivetrainConfig *drivetrain, int motor_id, float power);
+void drivetrain_motor_spin(DrivetrainConfig *drivetrain, int motor_id, double power);
 
 void drivetrain_motor_set_dir(DrivetrainConfig *drivetrain, int motor_id, MotorDirection dir);
 
-void drivetrain_motor_set_power(DrivetrainConfig *drivetrain, int motor_id, float power);
+void drivetrain_motor_set_power(DrivetrainConfig *drivetrain, int motor_id, double power);
 
 /**
  * @brief Spins a motor based on % power setting
@@ -26,7 +24,7 @@ void drivetrain_motor_set_power(DrivetrainConfig *drivetrain, int motor_id, floa
  * @param motor_id:  0..3
  * @param power:  % power (+/-)
  */
-void drivetrain_motor_spin(DrivetrainConfig *drivetrain, int motor_id, float power) {
+void drivetrain_motor_spin(DrivetrainConfig *drivetrain, int motor_id, double power) {
 
     MotorDirection dir = {0, 0};
 
@@ -55,14 +53,6 @@ void drivetrain_motor_set_dir(DrivetrainConfig *drivetrain, int motor_id, MotorD
     gpio_set_level(drivetrain->in2[motor_id], dir.in2);
 }
 
-float drivetrain_motor_get_duty(DrivetrainConfig *drivetrain, int motor_id) {
-    float duty = mcpwm_get_duty(
-            PWM_PARAMS[motor_id].unit,
-            PWM_PARAMS[motor_id].timer,
-            PWM_PARAMS[motor_id].generator);
-    return duty;
-}
-
 /**
  * @brief Sets motor power as a % of max duty cycle
  * 
@@ -70,7 +60,7 @@ float drivetrain_motor_get_duty(DrivetrainConfig *drivetrain, int motor_id) {
  * @param motor_id: motor id 0..3
  * @param power: % of max duty cycle
  */
-void drivetrain_motor_set_power(DrivetrainConfig *drivetrain, int motor_id, float power) {
+void drivetrain_motor_set_power(DrivetrainConfig *drivetrain, int motor_id, double power) {
     ESP_LOGW(TAG, "Setting power %.2f%% for motor %d", power * 100, motor_id);
 
     double duty = power * 99.0;

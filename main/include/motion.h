@@ -13,15 +13,16 @@ static void logDriveCommand(DriveCommand * c) {
     ESP_LOGI(TAG, "Got Drive: p=%f h=%f turn=%f", c->power, c->heading, c->turn);
 }
 
-static void motionTask(void * args) {
+static void motion_task(void * args) {
 
     DriveCommand driveCmd = {0,0,0};
 
     while(1) {
         if (xQueueReceive(drive_queue, (void *)&driveCmd, 0) == pdTRUE) {
             logDriveCommand(&driveCmd);
+            robot_move(&Robot, driveCmd);
         }
-        robot_move(&Robot, driveCmd);
+
         vTaskDelay(10);
     }
 
