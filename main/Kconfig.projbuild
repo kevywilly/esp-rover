@@ -1,72 +1,44 @@
 menu "ESP Rover Config"
-    menu "ESP Rover Pin Config"
-        config M0_IN1
-                int "Motor 0 Input 1 Pin"
-                default 14
+    menu "ESP Rover SONAR CONFIG"
+        config SONAR_TRIG_1
+            int "Sonar TRIG 1"
+            default 14
+        config SONAR_ECHO_1
+            int "Sonar ECHO 1"
+            default 32
+        config SONAR_TRIG_2
+            int "Sonar TRIG 2"
+            default 25
+        config SONAR_ECHO_2
+            int "Sonar ECHO 2"
+            default 26
+        config SONAR_TRIG_3
+            int "Sonar TRIG 3"
+            default 21
+        config SONAR_ECHO_3
+            int "Sonar ECHO 3"
+            default 22
+        config SONAR_TRIG_4
+            int "Sonar TRIG 4"
+            default 0
+        config SONAR_ECHO_4
+            int "Sonar ECHO 4"
+            default 15
+    endmenu
 
-        config M0_IN2
-                int "Motor 0 Input 2 Pin"
-                default 12
-
+    menu "ESP Rover PWM Config"
         config M0_PWM
                int "Motor 0 PWM pin"
                default 27
-
-        config M1_IN1
-                int "Motor 1 Input 1 Pin"
-                default 16
-
-        config M1_IN2
-                    int "Motor 1 Input 2 Pin"
-                    default 25
-
         config M1_PWM
-                    int "Motor 1 PWM Pin"
-                    default 33
-
-        config M2_IN1
-                    int "Motor 2 Input 1 Pin"
-                    default 21
-
-        config M2_IN2
-                    int "Motor 2 Input 2 Pin"
-                    default 22
-
+                int "Motor 1 PWM Pin"
+                default 33
         config M2_PWM
-                    int "Motor 2 PWM Pin"
-                    default 23
-
-        config M3_IN1
-                    int "Motor 3 Input 1 Pin"
-                    default 0
-
-        config M3_IN2
-                int "Motor 3 Input 2 Pin"
-                default 15
-
+                int "Motor 2 PWM Pin"
+                default 23
         config M3_PWM
                 int "Motor 3 PWM Pin"
                 default 4
-    endmenu
-
-    menu "ESP Rover Adjustment Factors"
-
-        config POWER_ADJUST0
-                int "Motor 0 Power Adjustment Factor"
-                default 100
-
-        config POWER_ADJUST1
-                int "Motor 1 Power Adjustment Factor"
-                default 100
-
-        config POWER_ADJUST2
-                int "Motor 2 Power Adjustment Factor"
-                default 100
-
-        config POWER_ADJUST3
-                int "Motor 3 Power Adjustment Factor"
-                default 100
-
     endmenu
 
     menu "ESP Rover Commands and Parameters"

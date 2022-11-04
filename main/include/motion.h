@@ -15,7 +15,7 @@ static void logDriveCommand(DriveCommand * c) {
 
 static void motion_task(void * args) {
 
-    DriveCommand driveCmd = {0,0,0};
+    DriveCommand driveCmd = {0,0,0, 20};
 
     while(1) {
         if (xQueueReceive(drive_queue, (void *)&driveCmd, 0) == pdTRUE) {
@@ -26,6 +26,6 @@ static void motion_task(void * args) {
         vTaskDelay(10);
     }
 
-
+    vTaskDelete(NULL);
 }
 #endif //ESPROVER_MOTION_H

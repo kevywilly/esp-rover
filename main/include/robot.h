@@ -5,9 +5,13 @@
 #include "driver/gpio.h"
 #include "drivetrain.h"
 #include "globals.h"
+#include "ultrasonic.h"
 
 void robot_init() {
-    drivetrain_init(&Robot.drivetrain);
+    drivetrain_init(&Robot);
+    for(int i=0; i < 4; i++) {
+        ultrasonic_init(&Robot.sonars[i]);
+    }
 }
 
 double abs_max(double *values, int size) {
@@ -47,7 +51,7 @@ void robot_move(RobotConfig *robot, DriveCommand request) {
     adj = max_val > 1.0 ? 1.0 / max_val : 1.0;
 
     for (i = 0; i < 4; i++)
-        drivetrain_motor_spin(&robot->drivetrain, i, values[i] * adj);
+        drivetrain_motor_spin(i, values[i] * adj);
 }
 
 #endif

@@ -6,29 +6,18 @@
 #define ESPROVER_STRUCTS_H
 
 #include "driver/gpio.h"
+#include "ultrasonic.h"
 
 typedef struct {
-    int in1;
-    int in2;
-} MotorDirection;
-
-typedef struct {
-    gpio_num_t in1[4];
-    gpio_num_t in2[4];
     gpio_num_t pwm[4];
-    //gpio_num_t enca[4];
-    double rpm_factor[4];
-} DrivetrainConfig;
-
-typedef struct {
-    DrivetrainConfig drivetrain;
-    gpio_num_t led_pin;
+    ultrasonic_sensor_t sonars[4];
 } RobotConfig;
 
 typedef struct {
     double heading;
     double power;
     double turn;  // +/- percentage
+    uint32_t duration;
 } DriveCommand;
 
 typedef struct {

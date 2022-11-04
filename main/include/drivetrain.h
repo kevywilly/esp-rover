@@ -9,13 +9,14 @@
 #include "globals.h"
 #include "structs.h"
 
-void drivetrain_init(DrivetrainConfig *drivetrain);
+#define SERVO_MIN_US 400
+#define SERVO_MAX_US 2400
 
-void drivetrain_motor_spin(DrivetrainConfig *drivetrain, int motor_id, double power);
+static const double servo_zero = (SERVO_MAX_US + SERVO_MIN_US)/2.0;
+static const double servo_duty_factor = (SERVO_MAX_US - SERVO_MIN_US)/2.0;
 
-void drivetrain_motor_set_dir(DrivetrainConfig *drivetrain, int motor_id, MotorDirection dir);
-
-void drivetrain_motor_set_power(DrivetrainConfig *drivetrain, int motor_id, double power);
+void drivetrain_init(RobotConfig *drivetrain);
+void drivetrain_motor_spin(int motor_id, double power);
 
 /**
  * @brief Spins a motor based on % power setting
@@ -24,93 +25,38 @@ void drivetrain_motor_set_power(DrivetrainConfig *drivetrain, int motor_id, doub
  * @param motor_id:  0..3
  * @param power:  % power (+/-)
  */
-void drivetrain_motor_spin(DrivetrainConfig *drivetrain, int motor_id, double power) {
+void drivetrain_motor_spin(int motor_id, double power) {
 
-    MotorDirection dir = {0, 0};
+    int orientation = (motor_id == 1 || motor_id == 2) ? 1 : -1;
+    power = power < -1 ? -1 : power > 1 ? 1 : power;
 
-    if (power > 0) {
-        dir.in1 = 1;
-    } else if (power < 0) {
-        dir.in2 = 1;
-    }
+    power = power * orientation;
 
-    drivetrain_motor_set_dir(drivetrain, motor_id, dir);
-    drivetrain_motor_set_power(drivetrain, motor_id, fabs(power));
+    double duty = (servo_zero + power*servo_duty_factor)/200.0;  // (100/20000)
+    ESP_LOGI(TAG, "Duty: %f", duty);
 
-}
-
-/**
- * @brief Sets motor spin direction via motor controller in1 and in2
- * 
- * @param drivetrain
- * @param motor: motor id 0..3 
- * @param dir: reverse, forward, stopped
- */
-void drivetrain_motor_set_dir(DrivetrainConfig *drivetrain, int motor_id, MotorDirection dir) {
-    ESP_LOGW(TAG, "Setting direction {%d, %d} for motor %d", dir.in1, dir.in2, motor_id);
-
-    gpio_set_level(drivetrain->in1[motor_id], dir.in1);
-    gpio_set_level(drivetrain->in2[motor_id], dir.in2);
-}
-
-/**
- * @brief Sets motor power as a % of max duty cycle
- * 
- * @param drivetrain
- * @param motor_id: motor id 0..3
- * @param power: % of max duty cycle
- */
-void drivetrain_motor_set_power(DrivetrainConfig *drivetrain, int motor_id, double power) {
-    ESP_LOGW(TAG, "Setting power %.2f%% for motor %d", power * 100, motor_id);
-
-    double duty = power * 99.0;
-    duty = duty > 99.0 ? 99.0 : duty;
-
+    // set duty 50, 100, etc.  not .50, 1.0
     mcpwm_set_duty(
             PWM_PARAMS[motor_id].unit,
             PWM_PARAMS[motor_id].timer,
             PWM_PARAMS[motor_id].generator,
-            duty * drivetrain->rpm_factor[motor_id]
+            duty
     );
     mcpwm_set_duty_type(PWM_PARAMS[motor_id].unit,
                         PWM_PARAMS[motor_id].timer,
                         PWM_PARAMS[motor_id].generator,
                         MCPWM_DUTY_MODE_0);
+
+
 }
+
 
 /**
  * @brief Configure drivetrain mnotors and encoders
  * 
  * @param drivetrain
  */
-void drivetrain_init(DrivetrainConfig *drivetrain) {
-
-    uint64_t in1_in2_bit_mask = 0;
-    //uint64_t enca_bitmask = 0;
-
-    for (int i = 0; i < 4; i++) {
-        in1_in2_bit_mask = (in1_in2_bit_mask | (1ULL << drivetrain->in1[i]) | (1ULL << drivetrain->in2[i]));
-        //enca_bitmask = (enca_bitmask | (1ULL << drivetrain->enca[i]));
-    }
-
-    // configure in1 and in2 pins
-    gpio_config_t io_conf = {};
-    io_conf.intr_type = GPIO_INTR_DISABLE;
-    io_conf.mode = GPIO_MODE_OUTPUT;
-    io_conf.pin_bit_mask = in1_in2_bit_mask;
-    io_conf.pull_down_en = GPIO_PULLDOWN_ENABLE;
-    io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
-    gpio_config(&io_conf);
-
-    /* We are not using encoders
-    // configure enc1 and ecb pins
-    io_conf.intr_type = GPIO_INTR_POSEDGE;
-    io_conf.mode = GPIO_MODE_INPUT;
-    io_conf.pin_bit_mask = enca_bitmask;
-    io_conf.pull_down_en = GPIO_PULLDOWN_ENABLE;
-    io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
-    gpio_config(&io_conf);
-     */
+void drivetrain_init(RobotConfig *drivetrain) {
 
     // PWM see https://docs.espressif.com/projects/esp-idf/en/v4.4.2/esp32/api-reference/peripherals/mcpwm.html?highlight=mcpwm_unit_0
 
@@ -120,7 +66,7 @@ void drivetrain_init(DrivetrainConfig *drivetrain) {
     }
 
     mcpwm_config_t pwm_config;
-    pwm_config.frequency = 80;    //frequency = 50Hz, i.e. for every servo motor time period should be 20ms
+    pwm_config.frequency = 50;    //frequency = 50Hz, i.e. for every servo motor time period should be 20ms
     pwm_config.cmpr_a = 0;    //duty cycle of PWMxA = 0
     pwm_config.cmpr_b = 0;    //duty cycle of PWMxb = 0
     pwm_config.counter_mode = MCPWM_UP_COUNTER;
