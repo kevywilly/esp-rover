@@ -1,4 +1,18 @@
 menu "ESP Rover Config"
+    menu "ESP Rover TOF CONFIG"
+        config TOF0_XSHUT
+            int "tof0 xshut"
+            default 18
+        config TOF1_XSHUT
+            int "tof1 xshut"
+            default 19
+        config TOF2_XSHUT
+            int "tof2 xshut"
+            default 22
+        config TOF3_XSHUT
+            int "tof3 xshut"
+            default 0
+    endmenu
     menu "ESP Rover SONAR CONFIG"
         config SONAR_TRIG_1
             int "Sonar TRIG 1"
@@ -86,6 +100,5 @@ endmenu
 # IN1_PINS   {GPIO_NUM_14, GPIO_NUM_16, GPIO_NUM_21,  GPIO_NUM_0}
 # IN2_PINS   {GPIO_NUM_12, GPIO_NUM_25, GPIO_NUM_22, GPIO_NUM_15}
 # PWM_PINS   {GPIO_NUM_27, GPIO_NUM_33, GPIO_NUM_23,  GPIO_NUM_4}
-# ENCA_PINS  {GPIO_NUM_32, GPIO_NUM_34, GPIO_NUM_18,  GPIO_NUM_5}
-# ENCB_PINS  {GPIO_NUM_13, GPIO_NUM_35, GPIO_NUM_19, GPIO_NUM_17}
+
 # RPM_FACTORS {1.0, 0.87, 0.84, 0.81}

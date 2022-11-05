@@ -10,7 +10,7 @@
 void robot_init() {
     drivetrain_init(&Robot);
     for(int i=0; i < 4; i++) {
-        ultrasonic_init(&Robot.sonars[i]);
+        //ultrasonic_init(&Robot.sonars[i]);
     }
 }
 

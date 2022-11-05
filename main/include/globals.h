@@ -35,13 +35,7 @@ static RobotConfig Robot = {
             (gpio_num_t) CONFIG_M1_PWM,
             (gpio_num_t) CONFIG_M2_PWM,
             (gpio_num_t) CONFIG_M3_PWM
-            },
-    .sonars = {
-            {.echo_pin = CONFIG_SONAR_ECHO_1, .trigger_pin = CONFIG_SONAR_TRIG_1},
-            {.echo_pin = CONFIG_SONAR_ECHO_2, .trigger_pin = CONFIG_SONAR_TRIG_2},
-            {.echo_pin = CONFIG_SONAR_ECHO_3, .trigger_pin = CONFIG_SONAR_TRIG_3},
-            {.echo_pin = CONFIG_SONAR_ECHO_4, .trigger_pin = CONFIG_SONAR_TRIG_4}
-    }
+            }
 };
 
 #endif //ESPROVER_GLOBALS_H

@@ -7,6 +7,7 @@
 
 #include "globals.h"
 #include "freertos/task.h"
+#include "tof.h"
 #include <math.h>
 
 #define SONAR_FRONT_RISK_THRESHOLD 3.0
@@ -90,9 +91,6 @@ static void autodrive_slide(DriveCommand *dc, int dir, double power, uint32_t du
 }
 
 
-
-
-
 static DriveCommand autodrive(sonar_distances_t d) {
     sonar_risks_t risk = sonar_calc_risk_levels(d);
 
@@ -154,10 +152,12 @@ static bool cmdEqual(DriveCommand c1, DriveCommand c2) {
 }
 
 void autodrive_task(void *args) {
+
+    tof_init_all();
+
     bool auto_mode = false;
     uint8_t mode_request = 0;
     DriveCommand cmd = (DriveCommand) {.heading = 0, .power = 0, .turn = 0};
-
 
     while (true) {
         if (xQueueReceive(auto_mode_queue, (void *) &mode_request, 0) == pdTRUE) {
@@ -165,25 +165,13 @@ void autodrive_task(void *args) {
             ESP_LOGI(TAG, "Got auto mode: %d", auto_mode);
         }
 
-        uint32_t fl;
-        uint32_t fr;
-        uint32_t r;
-        uint32_t l;
+        uint16_t d[NUM_TOFS];
+        tof_read_all(d);
 
-        if(ultrasonic_measure_cm(&Robot.sonars[0], 450, &fl) != ESP_OK)
-            fl=450;
-        if(ultrasonic_measure_cm(&Robot.sonars[1], 450, &fr) != ESP_OK)
-            fr=450;
-
-        if(ultrasonic_measure_cm(&Robot.sonars[2], 450, &r) != ESP_OK)
-            r=450;
-        if(ultrasonic_measure_cm(&Robot.sonars[3], 450, &l) != ESP_OK)
-            l=450;
-
-        sonar_distances_t distances = {fl, fr, r, l};
+        sonar_distances_t distances = {d[0]/10, d[1]/10, d[2]/10, d[3]/10};
         sonar_risks_t risks = sonar_calc_risk_levels(distances);
 
-        ESP_LOGI(TAG, "<SONAR FL=%d,%d FR=%d,%d R=%d,%d L=%d,%d >",
+        ESP_LOGI(TAG, "<distances fl=%d,%d fr=%d,%d r=%d,%d l=%d,%d >",
                  distances.front_left, risks.front_left,
                  distances.front_right,risks.front_right,
                  distances.right, risks.right,
@@ -201,11 +189,11 @@ void autodrive_task(void *args) {
             cmd = newCmd;
             if (auto_mode) {
                 xQueueSend(drive_queue, &cmd, 10);
-                vTaskDelay(pdMS_TO_TICKS(cmd.duration));
+                //vTaskDelay(pdMS_TO_TICKS(cmd.duration));
             }
         }
 
-        vTaskDelay(50);
+        vTaskDelay(10);
     }
 }
 

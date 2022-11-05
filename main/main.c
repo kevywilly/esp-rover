@@ -21,7 +21,7 @@
 #include "ultrasonic.h"
 #include "webserver.h"
 #include "motion.h"
-#include "vl53l0x.h"
+#include "tof.h"
 
 #define TASK_CORE 1
 /*
@@ -41,6 +41,7 @@ void init_network() {
 void app_main(void) {
 
     init_network();
+
     robot_init();
 
     //drivetrain_motor_spin(&Robot.drivetrain,0, 0.5);
@@ -48,12 +49,13 @@ void app_main(void) {
     auto_mode_queue = xQueueCreate(auto_mode_queue_len, sizeof(bool));
 
     xTaskCreatePinnedToCore(motion_task, "motion task", 4096, NULL, 2, NULL, TASK_CORE);
-    xTaskCreatePinnedToCore(autodrive_task, "read sonarf", 4096, NULL, 1, NULL, TASK_CORE);
+    xTaskCreatePinnedToCore(autodrive_task, "autodrive", 4096, NULL, 1, NULL, TASK_CORE);
 
     //xTaskCreate(vRobotTask, "run esp rover", 4096, NULL, 10, NULL);
     start_webserver();
 
 
     //xTaskCreate(&sweepServo_task,"sweepServo_task",2048,NULL,5,NULL);
+
 
 }
