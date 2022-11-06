@@ -7,8 +7,6 @@ cmake_minimum_required(VERSION 3.8)
 
 set(EXTRA_COMPONENT_DIRS
         $ENV{IDF_PATH}/examples/common_components/protocol_examples_common
-        /Users/kevywilly/esp/esp-idf-lib/components/ultrasonic
-        /Users/kevywilly/esp/esp-idf-lib/components/esp_idf_lib_helpers
         )
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)

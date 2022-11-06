@@ -16,10 +16,10 @@
 #define I2C_MASTER_RX_BUF_DISABLE   0                          /*!< I2C master doesn't need buffer */
 #define I2C_MASTER_TIMEOUT_MS       1000
 
-#define NUM_TOFS 4
+#define NUM_TOF_SENSORS 4
 #define TOF_START_ADDRESS 0x31
 
-static vl53l0x_t tofs[4] = {
+static vl53l0x_t tof_sensors[4] = {
         {.xshut = CONFIG_TOF0_XSHUT, .address = 0x29, .port=I2C_MASTER_NUM, .io_2v8 = 0, .io_timeout = 100},
         {.xshut = CONFIG_TOF1_XSHUT, .address = 0x29, .port=I2C_MASTER_NUM, .io_2v8 = 0, .io_timeout = 100},
         {.xshut = CONFIG_TOF2_XSHUT, .address = 0x29, .port=I2C_MASTER_NUM, .io_2v8 = 0, .io_timeout = 100},
@@ -27,8 +27,8 @@ static vl53l0x_t tofs[4] = {
 };
 
 static void tof_init_xshuts() {
-    for(int i=0; i < NUM_TOFS; i++) {
-        gpio_num_t pin = tofs[i].xshut;
+    for (int i = 0; i < NUM_TOF_SENSORS; i++) {
+        gpio_num_t pin = tof_sensors[i].xshut;
         gpio_reset_pin(pin);
         gpio_set_direction(pin, GPIO_MODE_OUTPUT);
         gpio_set_drive_capability(pin, GPIO_DRIVE_CAP_3);
@@ -48,9 +48,10 @@ static void tof_init_i2c() {
     };
 
     ESP_ERROR_CHECK(i2c_param_config(I2C_MASTER_NUM, &conf));
-    ESP_ERROR_CHECK(i2c_driver_install(I2C_MASTER_NUM, conf.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0));
-    ESP_ERROR_CHECK(i2c_set_timeout (I2C_MASTER_NUM, 80000));       // Clock stretching
-    ESP_ERROR_CHECK(i2c_filter_enable (I2C_MASTER_NUM, 5));
+    ESP_ERROR_CHECK(
+            i2c_driver_install(I2C_MASTER_NUM, conf.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0));
+    ESP_ERROR_CHECK(i2c_set_timeout(I2C_MASTER_NUM, 80000));       // Clock stretching
+    ESP_ERROR_CHECK(i2c_filter_enable(I2C_MASTER_NUM, 5));
 
 }
 
@@ -58,20 +59,19 @@ static void tof_init_all() {
     tof_init_xshuts();
     tof_init_i2c();
     uint8_t addr = TOF_START_ADDRESS;
-    for(int i=0; i < NUM_TOFS; i++) {
-        vl53l0x_init(&tofs[i]);
-        vl53l0x_setAddress(&tofs[i], addr++);
+    for (int i = 0; i < NUM_TOF_SENSORS; i++) {
+        vl53l0x_init(&tof_sensors[i]);
+        vl53l0x_setAddress(&tof_sensors[i], addr++);
     }
 }
 
-static void tof_read_all(uint16_t * distances) {
-    for(int i=0; i < NUM_TOFS; i++) {
-        distances[i] = vl53l0x_readRangeSingleMillimeters(&tofs[i]);
-#ifdef	CONFIG_VL53L0X_DEBUG
+static void tof_read_all(uint16_t *distances) {
+    for (int i = 0; i < NUM_TOF_SENSORS; i++) {
+        distances[i] = vl53l0x_readRangeSingleMillimeters(&tof_sensors[i]);
+#ifdef    CONFIG_VL53L0X_DEBUG
         ESP_LOGI(TAG,"Got distance %d: %d", i, distances[i]);
 #endif
     }
 }
-
 
 #endif //ESPROVER_TOF_H

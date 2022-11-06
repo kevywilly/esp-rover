@@ -8,18 +8,13 @@
 #include "globals.h"
 #include "freertos/task.h"
 #include "tof.h"
-#include <math.h>
+#include "motion.h"
 
-
-#define MAX_OF(A, B) (A > B ? B : A)
-#define MIN_OF(A, B) (B < A ? B : A)
-
+#define MAX_OF(A, B) ((A) > (B) ? (B) : (A))
+#define MIN_OF(A, B) ((B) < (A) ? (B) : (A))
 
 #define MEDIAL_BLOCKED 500
-#define MEDIAL_CLEAR 1000
-
 #define LATERAL_BLOCKED  200
-#define LATERAL_CLEAR 300
 
 typedef struct {
     uint16_t front;
@@ -29,37 +24,30 @@ typedef struct {
     uint16_t right;
     uint16_t lateral;
 
-    bool front_clear;
     bool front_blocked;
-    bool front_left_clear;
     bool front_left_blocked;
-    bool front_right_clear;
     bool front_right_blocked;
-    bool left_clear;
     bool left_blocked;
-    bool right_clear;
     bool right_blocked;
-    bool lateral_clear;
     bool lateral_blocked;
-    DriveCommand cmd;
+    drive_command_t cmd;
     bool avoiding;
     bool force;
-    char * result;
-    
-    
+    char *result;
+
 } obstacle_t;
 
 #define H_FORWARD 90
 #define H_RIGHT 0
 #define H_LEFT 180
 #define H_BACKWARD 270
-#define T_RIGHT -1
+#define T_RIGHT (-1)
 #define T_NONE 0
 #define T_LEFT 1
 
+static void get_obstacles(obstacle_t *o) {
 
-static void get_obstacles(obstacle_t * o) {
-    uint16_t d[NUM_TOFS];
+    uint16_t d[NUM_TOF_SENSORS];
     tof_read_all(d);
 
     o->front_left = d[0];
@@ -70,19 +58,12 @@ static void get_obstacles(obstacle_t * o) {
     o->front = MIN_OF(o->front_left, o->front_right);
     o->lateral = MIN_OF(o->left, o->right);
 
-    o->front_clear = o->front > MEDIAL_CLEAR;
-    o->front_left_clear = o->front_left > MEDIAL_CLEAR;
-    o->front_right_clear = o->front_right > MEDIAL_CLEAR;
-    o->left_clear = o->left > LATERAL_CLEAR;
-    o->right_clear = o->right > LATERAL_CLEAR;
-
     o->front_blocked = o->front <= MEDIAL_BLOCKED;
     o->front_left_blocked = o->front_left <= MEDIAL_BLOCKED;
     o->front_right_blocked = o->front_right <= MEDIAL_BLOCKED;
     o->left_blocked = o->left <= LATERAL_BLOCKED;
     o->right_blocked = o->right <= LATERAL_BLOCKED;
     o->lateral_blocked = o->lateral <= LATERAL_BLOCKED;
-    o->lateral_clear = o->lateral > LATERAL_CLEAR;
 
     o->cmd.turn = T_NONE;
     o->cmd.power = 0.0;
@@ -92,45 +73,45 @@ static void get_obstacles(obstacle_t * o) {
 
     o->avoiding = false;
 
-    if(o->front_blocked) {
+    if (o->front_blocked) {
         double turn_dir;
-        if(o->front_right_blocked){
-            if(o->right_blocked || (o->left > o->right)) {
+        if (o->front_right_blocked) {
+            if (o->right_blocked || (o->left > o->right)) {
                 turn_dir = T_LEFT;
             } else {
                 turn_dir = T_RIGHT;
             }
         } else {
-            if(o->left_blocked || (o->right > o->left)) {
+            if (o->left_blocked || (o->right > o->left)) {
                 turn_dir = T_RIGHT;
             } else {
                 turn_dir = T_LEFT;
             }
         }
-        o->cmd = (DriveCommand) {H_BACKWARD, 0.0, turn_dir};
+        o->cmd = (drive_command_t) {H_BACKWARD, 0.0, turn_dir};
         o->avoiding = true;
     }
 
-    if(o->avoiding) {
+    if (o->avoiding) {
         return;
     }
 
-    if(o->right_blocked || o->left_blocked) {
-        if(!o->left_blocked) {
-            o->cmd = (DriveCommand) {(H_LEFT + H_FORWARD)/2, 0.8, 0.0};
+    if (o->right_blocked || o->left_blocked) {
+        if (!o->left_blocked) {
+            o->cmd = (drive_command_t) {(H_LEFT + H_FORWARD) / 2, 0.8, 0.0};
             return;
-        } else if(!o->right_blocked) {
-            o->cmd = (DriveCommand) {(H_RIGHT + H_FORWARD)/2, 0.8, 0.0};
+        } else if (!o->right_blocked) {
+            o->cmd = (drive_command_t) {(H_RIGHT + H_FORWARD) / 2, 0.8, 0.0};
             return;
         } else {
-            o->cmd = (DriveCommand) {H_FORWARD, 0.8, 0.0};
+            o->cmd = (drive_command_t) {H_FORWARD, 0.8, 0.0};
         }
     }
 
     o->result = "ALL CLEAR";
-    o->cmd = (DriveCommand) {H_FORWARD, 1.0, T_NONE};
+    o->cmd = (drive_command_t) {H_FORWARD, 1.0, T_NONE};
 
-    
+
 }
 
 static void printObstacles(obstacle_t o) {
@@ -142,10 +123,11 @@ static void printObstacles(obstacle_t o) {
 }
 
 void autodrive_stop() {
-    DriveCommand cmd = (DriveCommand) {.heading=90, .power = 0, .turn = 0.0};
+    drive_command_t cmd = (drive_command_t) {.heading=90, .power = 0, .turn = 0.0};
     xQueueSend(drive_queue, &cmd, 10);
 
 }
+
 void autodrive_task(void *args) {
 
     tof_init_all();
@@ -153,7 +135,7 @@ void autodrive_task(void *args) {
     bool auto_mode = false;
     obstacle_t o;
 
-    while(1) {
+    while (1) {
         if (xQueueReceive(auto_mode_queue, (void *) &mode_request, 0) == pdTRUE) {
             auto_mode = !auto_mode;
             autodrive_stop();
@@ -161,7 +143,7 @@ void autodrive_task(void *args) {
         get_obstacles(&o);
         printObstacles(o);
 
-        if(auto_mode) {
+        if (auto_mode) {
             xQueueSend(drive_queue, &o.cmd, 10);
         }
 

@@ -7,7 +7,6 @@
 
 #include <esp_http_server.h>
 #include "driver/gpio.h"
-#include "structs.h"
 
 #ifndef RADIANS
 #define RADIANS 0.0174533
@@ -22,20 +21,5 @@ static const int auto_mode_queue_len = 2;
 static QueueHandle_t drive_queue;
 static QueueHandle_t auto_mode_queue;
 
-static const PWMParams PWM_PARAMS[4] = {
-        {.unit = MCPWM_UNIT_0, .timer = MCPWM_TIMER_0, .generator = MCPWM_GEN_A, .signal=MCPWM0A},
-        {.unit = MCPWM_UNIT_0, .timer = MCPWM_TIMER_0, .generator = MCPWM_GEN_B, .signal=MCPWM0B},
-        {.unit = MCPWM_UNIT_1, .timer = MCPWM_TIMER_1, .generator = MCPWM_GEN_A, .signal=MCPWM1A},
-        {.unit = MCPWM_UNIT_1, .timer = MCPWM_TIMER_1, .generator = MCPWM_GEN_B, .signal=MCPWM1B}
-};
-
-static RobotConfig Robot = {
-    .pwm = {
-            (gpio_num_t) CONFIG_M0_PWM,
-            (gpio_num_t) CONFIG_M1_PWM,
-            (gpio_num_t) CONFIG_M2_PWM,
-            (gpio_num_t) CONFIG_M3_PWM
-            }
-};
 
 #endif //ESPROVER_GLOBALS_H

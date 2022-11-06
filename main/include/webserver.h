@@ -25,14 +25,14 @@ static esp_err_t process_move_request(cJSON *root) {
     double heading = cJSON_GetObjectItem(root, CONFIG_HEADING_PARAM_NAME)->valuedouble;
     double power = cJSON_GetObjectItem(root, CONFIG_POWER_PARAM_NAME)->valuedouble;
     double turn = cJSON_GetObjectItem(root, CONFIG_TURN_PARAM_NAME)->valuedouble;
-    DriveCommand cmd = {.power = power, .heading = heading, .turn = turn};
+    drive_command_t cmd = {.power = power, .heading = heading, .turn = turn};
     xQueueSend(drive_queue, &cmd, 10);
     return ESP_OK;
 }
 
 static esp_err_t process_auto_mode() {
     uint8_t cmd = 1;
-    DriveCommand dt = {.power = 0, .heading = 0, .turn = 0};
+    drive_command_t dt = {.power = 0, .heading = 0, .turn = 0};
     xQueueSend(auto_mode_queue, &cmd, 10);
     xQueueSend(drive_queue, &dt, 10);
     return ESP_OK;
@@ -43,7 +43,7 @@ static esp_err_t process_request(cJSON *root) {
 
     if (strcmp(cmd, CONFIG_MOVE_COMMAND) == 0) {
         return process_move_request(root);
-    } else if(strcmp(cmd, CONFIG_AUTO_DRIVE_COMMAND) == 0) {
+    } else if (strcmp(cmd, CONFIG_AUTO_DRIVE_COMMAND) == 0) {
         return process_auto_mode();
     }
     return ESP_OK;
@@ -54,7 +54,7 @@ static esp_err_t process_request(cJSON *root) {
 static esp_err_t home_get_handler(httpd_req_t *req) {
     httpd_resp_set_type(req, "text/html");
     httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
-    httpd_resp_send(req, (const char *)DOCROOT, DOCROOT_LEN);
+    httpd_resp_send(req, (const char *) DOCROOT, DOCROOT_LEN);
     return ESP_OK;
 }
 
@@ -95,7 +95,7 @@ static esp_err_t api_post_handler(httpd_req_t *req) {
     cJSON_AddStringToObject(r, "status", "ok");
     const char *resp = cJSON_Print(r);
     httpd_resp_sendstr(req, resp);
-    free((void *)resp);
+    free((void *) resp);
     cJSON_Delete(r);
 
     return ESP_OK;
