@@ -10,12 +10,14 @@
 #include "robot.h"
 
 static void logDriveCommand(DriveCommand * c) {
+#ifdef CONFIG_ESP_ROVER_DEBUG
     ESP_LOGI(TAG, "Got Drive: p=%f h=%f turn=%f", c->power, c->heading, c->turn);
+#endif
 }
 
 static void motion_task(void * args) {
 
-    DriveCommand driveCmd = {0,0,0, 20};
+    DriveCommand driveCmd = {0,0,0};
 
     while(1) {
         if (xQueueReceive(drive_queue, (void *)&driveCmd, 0) == pdTRUE) {

@@ -25,7 +25,7 @@ double abs_max(double *values, int size) {
 }
 
 void robot_move(RobotConfig *robot, DriveCommand request) {
-    ESP_LOGW(TAG, "<Move heading: %2.f power: %2.f %%>", request.heading, request.power * 100);
+    ESP_LOGW(TAG, "<Move heading: %2.f power: %2.f %% turn: %2.f %%>", request.heading, request.power * 100, request.turn * 100);
     double max_val;
     int i;
     double adj;

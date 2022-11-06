@@ -100,7 +100,7 @@
         size: btnSize
     });
     joy2.on('move', function (evt, data) {
-        _turn = ((data.angle.degree >=90 && data.angle.degree <= 270) ? -1.0 : 1.0) * data.distance/(btnSize/2.0);
+        _turn = ((data.angle.degree >=90 && data.angle.degree <= 270) ? 1.0 : -1.0) * data.distance/(btnSize/2.0);
         display_data();
     });
     joy2.on('end', function (evt, data) {

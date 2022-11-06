@@ -25,14 +25,14 @@ static esp_err_t process_move_request(cJSON *root) {
     double heading = cJSON_GetObjectItem(root, CONFIG_HEADING_PARAM_NAME)->valuedouble;
     double power = cJSON_GetObjectItem(root, CONFIG_POWER_PARAM_NAME)->valuedouble;
     double turn = cJSON_GetObjectItem(root, CONFIG_TURN_PARAM_NAME)->valuedouble;
-    DriveCommand cmd = {.power = power, .heading = heading, .turn = turn, .duration = 0};
+    DriveCommand cmd = {.power = power, .heading = heading, .turn = turn};
     xQueueSend(drive_queue, &cmd, 10);
     return ESP_OK;
 }
 
 static esp_err_t process_auto_mode() {
     uint8_t cmd = 1;
-    DriveCommand dt = {.power = 0, .heading = 0, .turn = 0, .duration = 0};
+    DriveCommand dt = {.power = 0, .heading = 0, .turn = 0};
     xQueueSend(auto_mode_queue, &cmd, 10);
     xQueueSend(drive_queue, &dt, 10);
     return ESP_OK;
@@ -79,9 +79,11 @@ static esp_err_t api_post_handler(httpd_req_t *req) {
         remaining -= ret;
 
         /* Log data received */
+#ifdef CONFIG_ESP_ROVER_DEBUG
         ESP_LOGI(TAG, "=========== RECEIVED DATA ==========");
         ESP_LOGI(TAG, "%.*s", ret, buf);
         ESP_LOGI(TAG, "====================================");
+#endif
     }
 
     cJSON *root = cJSON_Parse(buf);

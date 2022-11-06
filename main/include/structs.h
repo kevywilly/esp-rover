@@ -17,7 +17,6 @@ typedef struct {
     double heading;
     double power;
     double turn;  // +/- percentage
-    uint32_t duration;
 } DriveCommand;
 
 typedef struct {

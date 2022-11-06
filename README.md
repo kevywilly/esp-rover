@@ -30,3 +30,12 @@ Below is short explanation of remaining files in the project folder.
 ```
 Additionally, the sample project contains Makefile and component.mk files, used for the legacy Make based build system. 
 They are not used or needed when building with CMake and idf.py.
+
+## Create DocRoot
+
+```shell
+
+gzip -c docroot.html > docroot.html.gz
+ziputil docroot.html.gz DOCROOT
+
+```

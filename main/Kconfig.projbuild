@@ -1,4 +1,11 @@
 menu "ESP Rover Config"
+
+    config ESP_ROVER_DEBUG
+    bool "Low level debug"
+    default n
+    help
+        Low level debug
+
     menu "ESP Rover TOF CONFIG"
         config TOF0_XSHUT
             int "tof0 xshut"

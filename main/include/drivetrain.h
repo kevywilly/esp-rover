@@ -32,8 +32,7 @@ void drivetrain_motor_spin(int motor_id, double power) {
 
     power = power * orientation;
 
-    double duty = (servo_zero + power*servo_duty_factor)/200.0;  // (100/20000)
-    ESP_LOGI(TAG, "Duty: %f", duty);
+    double duty = power == 0 ? 0.0 : (servo_zero + power*servo_duty_factor)/200.0;  // (100/20000)
 
     // set duty 50, 100, etc.  not .50, 1.0
     mcpwm_set_duty(
