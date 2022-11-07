@@ -32,7 +32,7 @@ static servo_t servos[MOTION_NUM_SERVOS] = {
         {.pwm_pin = CONFIG_M3_PWM, .unit = MCPWM_UNIT_1, .timer = MCPWM_TIMER_1, .generator = MCPWM_GEN_B, .signal=MCPWM1B, .orientation = SERVO_ORIENTATION_REVERSE}
 };
 
-double abs_max(double *values, int size) {
+double abs_max(float *values, int size) {
     double max = 0;
     for (int i = 0; i < size; i++) {
         if (fabs(values[i]) > max) {

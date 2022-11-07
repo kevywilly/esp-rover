@@ -26,7 +26,7 @@ extern "C" {
     void app_main(void);
 }
 */
-void init_network() {
+void init_network(httpd_handle_t * server) {
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
@@ -37,7 +37,9 @@ void init_network() {
 
 void app_main(void) {
 
-    init_network();
+    static httpd_handle_t server = NULL;
+
+    init_network(&server);
 
     drive_queue = xQueueCreate(drive_queue_len, sizeof(drive_command_t));
     auto_mode_queue = xQueueCreate(auto_mode_queue_len, sizeof(bool));
