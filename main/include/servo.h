@@ -9,8 +9,8 @@
 #include "driver/gpio.h"
 #include "driver/mcpwm.h"
 
-#define SERVO_MIN_US 400
-#define SERVO_MAX_US 2400
+#define SERVO_MIN_US 450
+#define SERVO_MAX_US 2450
 
 typedef enum {
     SERVO_ORIENTATION_NORMAL = 1,

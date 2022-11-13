@@ -59,7 +59,17 @@
         .joystic-container {}
         .results {margin: auto; width: 100%; font-size:1.5rem; text-align: center; min-height: 2.5rem;}
         .auto-container {margin: auto; width: 100%; text-align: center;}
-        .auto-btn {margin: auto; border: none; background: orange; color: white; padding: 8px; border-radius: 4px;}
+        .auto-btn {font-size: 2em; background-color: #00D000; padding: 14px 10px 10px 14px;  border: none; border-radius: 10px;}
+        .auto-btn:hover {
+            background-color: #00FF00;
+            transition: 0.2s;
+        }
+        .auto-btn:focus {
+            outline-color: transparent;
+            outline-style:solid;
+            outline-width: 16px;
+            transition: 0.7s;
+        }
         h1 {color:#0F3376; padding:1vh; text-align:center}
     </style>
 </head>
@@ -67,7 +77,7 @@
 <h1>ESP Rover</h1>
 <div class="results" id="results"></div>
 <div class="auto-container">
-    <button class="auto-btn"onclick="toggle_auto();">Toggle Auto Drive</button></div>
+    <button class="auto-btn" onclick="toggle_auto();">AUTO-DRIVE</button></div>
 <div class='container'>
     <div id='joystick' class='joystic-container'></div>
     <div id='joystick2' class='joystic-container'></div>

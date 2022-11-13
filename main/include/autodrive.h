@@ -47,7 +47,7 @@ typedef struct {
 
 static void get_obstacles(obstacle_t *o) {
 
-    uint16_t d[NUM_TOF_SENSORS];
+    uint32_t d[NUM_TOF_SENSORS];
     tof_read_all(d);
 
     o->front_left = d[0];
@@ -147,7 +147,7 @@ void autodrive_task(void *args) {
             xQueueSend(drive_queue, &o.cmd, 10);
         }
 
-        vTaskDelay(20);
+        vTaskDelay(pdMS_TO_TICKS(20));
     }
 
     vTaskDelete(NULL);

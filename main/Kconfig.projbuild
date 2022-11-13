@@ -20,32 +20,6 @@ menu "ESP Rover Config"
             int "tof3 xshut"
             default 0
     endmenu
-    menu "ESP Rover SONAR CONFIG"
-        config SONAR_TRIG_1
-            int "Sonar TRIG 1"
-            default 14
-        config SONAR_ECHO_1
-            int "Sonar ECHO 1"
-            default 32
-        config SONAR_TRIG_2
-            int "Sonar TRIG 2"
-            default 25
-        config SONAR_ECHO_2
-            int "Sonar ECHO 2"
-            default 26
-        config SONAR_TRIG_3
-            int "Sonar TRIG 3"
-            default 21
-        config SONAR_ECHO_3
-            int "Sonar ECHO 3"
-            default 22
-        config SONAR_TRIG_4
-            int "Sonar TRIG 4"
-            default 0
-        config SONAR_ECHO_4
-            int "Sonar ECHO 4"
-            default 15
-    endmenu
 
     menu "ESP Rover PWM Config"
         config M0_PWM
@@ -101,7 +75,6 @@ menu "ESP Rover Config"
         config TURN_PARAM_NAME
             string "Parameter used for turn setting"
             default "turn"
-
     endmenu
 endmenu
 # IN1_PINS   {GPIO_NUM_14, GPIO_NUM_16, GPIO_NUM_21,  GPIO_NUM_0}

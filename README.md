@@ -36,6 +36,6 @@ They are not used or needed when building with CMake and idf.py.
 ```shell
 
 gzip -c docroot.html > docroot.html.gz
-ziputil docroot.html.gz DOCROOT
+./ziputil docroot.html.gz DOCROOT
 
 ```

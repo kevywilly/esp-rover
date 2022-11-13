@@ -19,6 +19,8 @@
 #define NUM_TOF_SENSORS 4
 #define TOF_START_ADDRESS 0x31
 
+static const uint8_t tof_addresses[4] = {0x31, 0x32, 0x33, 0x35};
+
 static vl53l0x_t tof_sensors[4] = {
         {.xshut = CONFIG_TOF0_XSHUT, .address = 0x29, .port=I2C_MASTER_NUM, .io_2v8 = 0, .io_timeout = 100},
         {.xshut = CONFIG_TOF1_XSHUT, .address = 0x29, .port=I2C_MASTER_NUM, .io_2v8 = 0, .io_timeout = 100},
@@ -61,11 +63,11 @@ static void tof_init_all() {
     uint8_t addr = TOF_START_ADDRESS;
     for (int i = 0; i < NUM_TOF_SENSORS; i++) {
         vl53l0x_init(&tof_sensors[i]);
-        vl53l0x_setAddress(&tof_sensors[i], addr++);
+        vl53l0x_setAddress(&tof_sensors[i], tof_addresses[i]);
     }
 }
 
-static void tof_read_all(uint16_t *distances) {
+static void tof_read_all(uint32_t *distances) {
     for (int i = 0; i < NUM_TOF_SENSORS; i++) {
         distances[i] = vl53l0x_readRangeSingleMillimeters(&tof_sensors[i]);
 #ifdef    CONFIG_VL53L0X_DEBUG
