@@ -131,6 +131,8 @@ void autodrive_stop() {
 void autodrive_task(void *args) {
 
     tof_init_all();
+    tof_start_all();
+
     uint8_t mode_request = 0;
     bool auto_mode = false;
     obstacle_t o;
@@ -147,7 +149,7 @@ void autodrive_task(void *args) {
             xQueueSend(drive_queue, &o.cmd, 10);
         }
 
-        vTaskDelay(20);
+        vTaskDelay(pdMS_TO_TICKS(20));
     }
 
     vTaskDelete(NULL);

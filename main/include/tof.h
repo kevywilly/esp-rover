@@ -55,6 +55,12 @@ static void tof_init_i2c() {
 
 }
 
+static void tof_init_one(vl53l0x_t * sensor, uint8_t new_addr) {
+    sensor->address = 0x29;
+    vl53l0x_init(sensor);
+    vl53l0x_setAddress(sensor, new_addr);
+}
+
 static void tof_init_all() {
     tof_init_xshuts();
     tof_init_i2c();
@@ -65,9 +71,14 @@ static void tof_init_all() {
     }
 }
 
+static void tof_start_all() {
+    for (int i = 0; i < NUM_TOF_SENSORS; i++) {
+        vl53l0x_startContinuous(&tof_sensors[i], 10);
+    }
+}
 static void tof_read_all(uint16_t *distances) {
     for (int i = 0; i < NUM_TOF_SENSORS; i++) {
-        distances[i] = vl53l0x_readRangeSingleMillimeters(&tof_sensors[i]);
+        distances[i] = vl53l0x_readRangeContinuousMillimeters(&tof_sensors[i]);
 #ifdef    CONFIG_VL53L0X_DEBUG
         ESP_LOGI(TAG,"Got distance %d: %d", i, distances[i]);
 #endif

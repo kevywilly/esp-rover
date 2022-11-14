@@ -26,10 +26,10 @@ static void log_drive_command(drive_command_t *c) {
 #define MOTION_NUM_SERVOS 4
 
 static servo_t servos[MOTION_NUM_SERVOS] = {
-        {.pwm_pin = CONFIG_M0_PWM, .unit = MCPWM_UNIT_0, .timer = MCPWM_TIMER_0, .generator = MCPWM_GEN_A, .signal=MCPWM0A, .orientation = SERVO_ORIENTATION_REVERSE},
-        {.pwm_pin = CONFIG_M1_PWM, .unit = MCPWM_UNIT_0, .timer = MCPWM_TIMER_0, .generator = MCPWM_GEN_B, .signal=MCPWM0B, .orientation = SERVO_ORIENTATION_NORMAL},
-        {.pwm_pin = CONFIG_M2_PWM, .unit = MCPWM_UNIT_1, .timer = MCPWM_TIMER_1, .generator = MCPWM_GEN_A, .signal=MCPWM1A, .orientation = SERVO_ORIENTATION_NORMAL},
-        {.pwm_pin = CONFIG_M3_PWM, .unit = MCPWM_UNIT_1, .timer = MCPWM_TIMER_1, .generator = MCPWM_GEN_B, .signal=MCPWM1B, .orientation = SERVO_ORIENTATION_REVERSE}
+        {.pwm_pin = CONFIG_M0_PWM, .unit = MCPWM_UNIT_0, .timer = MCPWM_TIMER_0, .generator = MCPWM_GEN_A, .signal=MCPWM0A, .orientation = SERVO_ORIENTATION_NORMAL},
+        {.pwm_pin = CONFIG_M1_PWM, .unit = MCPWM_UNIT_0, .timer = MCPWM_TIMER_0, .generator = MCPWM_GEN_B, .signal=MCPWM0B, .orientation = SERVO_ORIENTATION_REVERSE},
+        {.pwm_pin = CONFIG_M2_PWM, .unit = MCPWM_UNIT_1, .timer = MCPWM_TIMER_1, .generator = MCPWM_GEN_A, .signal=MCPWM1A, .orientation = SERVO_ORIENTATION_REVERSE},
+        {.pwm_pin = CONFIG_M3_PWM, .unit = MCPWM_UNIT_1, .timer = MCPWM_TIMER_1, .generator = MCPWM_GEN_B, .signal=MCPWM1B, .orientation = SERVO_ORIENTATION_NORMAL}
 };
 
 double abs_max(float *values, int size) {
@@ -49,8 +49,10 @@ static void motion_init() {
 }
 
 void motion_apply(drive_command_t request) {
-    ESP_LOGW(TAG, "<Move heading: %2.f power: %2.f %% turn: %2.f %%>", request.heading, request.power * 100,
+#ifdef CONFIG_ESP_ROVER_DEBUG
+    ESP_LOGI(TAG, "<Move heading: %2.f power: %2.f %% turn: %2.f %%>", request.heading, request.power * 100,
              request.turn * 100);
+#endif
     float max_val;
     int i;
     float adj;
