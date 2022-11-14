@@ -6,6 +6,10 @@ menu "ESP Rover Config"
     help
         Low level debug
 
+    config ESP_ROVER_MAX_POWER
+        int "max power pct"
+        default 80
+
     menu "ESP Rover TOF CONFIG"
         config TOF0_XSHUT
             int "tof0 xshut"

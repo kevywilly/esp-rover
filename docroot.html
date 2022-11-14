@@ -3,8 +3,8 @@
 <head>
     <meta charset='UTF-8'>
     <title>ESP Rover</title>
-    <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.9.1/nipplejs.min.js'></script>
-    <script type='Module' src='https://cdnjs.cloudflare.com/ajax/libs/fetch/3.6.2/fetch.min.js'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.9.1/nipplejs.min.js' type='text/javascript'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/fetch/3.6.2/fetch.min.js' type='Module'></script>
     <script type='text/javascript'>
         let _delay = 200;
 
@@ -18,14 +18,14 @@
         let _power = 0;
         let _turn = 0;
 
-        time=setInterval(function(){
-            if(_cmd === _prev_cmd && _heading === _prev_heading && _power === _prev_power && _turn == _prev_turn) {
+        time = setInterval(function () {
+            if (_cmd === _prev_cmd && _heading === _prev_heading && _power === _prev_power && _turn == _prev_turn) {
                 return;
             }
             const requestOptions = {
                 method: 'POST',
-                headers: { 'Content-Type': '*/*'},
-                body: JSON.stringify({ cmd: _cmd, heading: _heading, power: _power, turn: _turn })
+                headers: {'Content-Type': '*/*'},
+                body: JSON.stringify({cmd: _cmd, heading: _heading, power: _power, turn: _turn})
             };
 
             fetch('/api', requestOptions)
@@ -36,16 +36,17 @@
             _prev_power = _power;
             _prev_turn = _turn;
 
-        },_delay);
+        }, _delay);
 
         function display_data() {
-            document.getElementById('results').innerText = `h: ${Math.round(_heading)}, p: ${Math.round(_power*100)} %, t: ${Math.round(_turn*100)} %`;
+            document.getElementById('results').innerText = `h: ${Math.round(_heading)}, p: ${Math.round(_power * 100)} %, t: ${Math.round(_turn * 100)} %`;
         }
+
         function toggle_auto() {
             const requestOptions = {
                 method: 'POST',
-                headers: { 'Content-Type': '*/*'},
-                body: JSON.stringify({ cmd: "auto"})
+                headers: {'Content-Type': '*/*'},
+                body: JSON.stringify({cmd: "auto"})
             };
             fetch('/api', requestOptions)
                 .then((resp) => console.log(resp.statusText))
@@ -54,36 +55,94 @@
 
     </script>
     <style>
-        html {font-family:Helvetica;margin:0; height: 100%; overflow: clip;}
-        .container {width: 100%; height: 100px; overflow: hidden}
-        .joystic-container {}
-        .results {margin: auto; width: 100%; font-size:1.5rem; text-align: center; min-height: 2.5rem;}
-        .auto-container {margin: auto; width: 100%; text-align: center;}
-        .auto-btn {margin: auto; border: none; background: orange; color: white; padding: 8px; border-radius: 4px;}
-        h1 {color:#0F3376; padding:1vh; text-align:center}
+        html {
+            font-family: Helvetica;
+            margin: 0;
+            height: 100%;
+            overflow: clip;
+        }
+
+        .container {
+            width: 100%;
+            height: 100px;
+            overflow: hidden
+        }
+
+        .joystick-container {
+
+        }
+
+        .results {
+            margin: auto;
+            width: 100%;
+            font-size: 1.5rem;
+            text-align: center;
+            min-height: 2.5rem;
+        }
+
+        .auto-container {
+            margin: auto;
+            width: 100%;
+            text-align: center;
+        }
+
+        .video-container {
+            position: absolute;
+            margin: auto;
+            width: 100%;
+            height: 240px;
+            top: 80px;
+            text-align: center;
+        }
+        .auto-btn {
+            position: relative;
+            font-size: 2em;
+            top: 10px;
+            margin: auto;
+            border: none;
+            background: orange;
+            color: white;
+            padding: 8px;
+            border-radius: 4px;
+        }
+
+        h1 {
+            color: #0F3376;
+            padding: 1vh;
+            text-align: center
+        }
     </style>
 </head>
 <body>
 <h1>ESP Rover</h1>
-<div class="results" id="results"></div>
-<div class="auto-container">
-    <button class="auto-btn"onclick="toggle_auto();">Toggle Auto Drive</button></div>
-<div class='container'>
-    <div id='joystick' class='joystic-container'></div>
-    <div id='joystick2' class='joystic-container'></div>
+<div>
+    <div class="results" id="results"></div>
+
+    <div class="video-container">
+        <embed type="multipart/x-mixed-replace" src="http://espcamera.lan:81/stream" width="320" height="240">
+        <div class="auto-container">
+            <button class="auto-btn" onclick="toggle_auto();">Toggle Auto Drive</button>
+        </div>
+    </div>
+    <div class='container'>
+        <div class='joystick-container' id='joystick'></div>
+        <div class='joystick-container' id='joystick2'></div>
+    </div>
+
+
 </div>
 
 <script>
-    let btnSize= 200;
+    let btnSize = 200;
     let joy = nipplejs.create({
         zone: document.getElementById('joystick'),
         mode: 'static',
-        position: {left: '25%', top: '50%'},
+        position: {left: '25%', bottom: '25%'},
         color: 'blue',
         size: btnSize
     });
     joy.on('move', function (evt, data) {
-        _power = data.distance/(btnSize/2.0);
+        _power = data.distance / (btnSize / 2.0);
         _heading = _power === 0 ? 0.0 : data.angle.degree; //Math.round(data.angle.degree/15)*15;
         display_data();
     });
@@ -95,12 +154,12 @@
     let joy2 = nipplejs.create({
         zone: document.getElementById('joystick2'),
         mode: 'static',
-        position: {left: '75%', top: '50%'},
+        position: {left: '75%', bottom: '25%'},
         color: 'blue',
         size: btnSize
     });
     joy2.on('move', function (evt, data) {
-        _turn = ((data.angle.degree >=90 && data.angle.degree <= 270) ? 1.0 : -1.0) * data.distance/(btnSize/2.0);
+        _turn = ((data.angle.degree >= 90 && data.angle.degree <= 270) ? 1.0 : -1.0) * data.distance / (btnSize / 2.0);
         display_data();
     });
     joy2.on('end', function (evt, data) {

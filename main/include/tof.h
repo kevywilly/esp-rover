@@ -5,6 +5,7 @@
 #ifndef ESPROVER_TOF_H
 #define ESPROVER_TOF_H
 
+#include <esp_log.h>
 #include "vl53l0x.h"
 #include "driver/i2c.h"
 
@@ -19,6 +20,7 @@
 #define NUM_TOF_SENSORS 4
 #define TOF_START_ADDRESS 0x31
 
+static int tof_failures = 0;
 static vl53l0x_t tof_sensors[4] = {
         {.xshut = CONFIG_TOF0_XSHUT, .address = 0x29, .port=I2C_MASTER_NUM, .io_2v8 = 0, .io_timeout = 100},
         {.xshut = CONFIG_TOF1_XSHUT, .address = 0x29, .port=I2C_MASTER_NUM, .io_2v8 = 0, .io_timeout = 100},
@@ -62,12 +64,12 @@ static void tof_init_one(vl53l0x_t * sensor, uint8_t new_addr) {
 }
 
 static void tof_init_all() {
+    tof_failures = 0;
     tof_init_xshuts();
     tof_init_i2c();
     uint8_t addr = TOF_START_ADDRESS;
     for (int i = 0; i < NUM_TOF_SENSORS; i++) {
-        vl53l0x_init(&tof_sensors[i]);
-        vl53l0x_setAddress(&tof_sensors[i], addr++);
+        tof_init_one(&tof_sensors[i], addr++);
     }
 }
 
@@ -76,13 +78,26 @@ static void tof_start_all() {
         vl53l0x_startContinuous(&tof_sensors[i], 10);
     }
 }
-static void tof_read_all(uint16_t *distances) {
+
+static esp_err_t tof_read_all(uint16_t *distances) {
     for (int i = 0; i < NUM_TOF_SENSORS; i++) {
-        distances[i] = vl53l0x_readRangeContinuousMillimeters(&tof_sensors[i]);
+        uint16_t d = vl53l0x_readRangeContinuousMillimeters(&tof_sensors[i]);
+        if(d == 65535) {
+            tof_failures++;
+            if(tof_failures >= 3) {
+#ifdef CONFIG_ESP_ROVER_DEBUG
+                ESP_LOGI(TAG, "TOF %d has failed multiple times", i);
+#endif
+                return ESP_FAIL;
+            }
+        } else {
+            distances[i] = d;
+        }
 #ifdef    CONFIG_VL53L0X_DEBUG
         ESP_LOGI(TAG,"Got distance %d: %d", i, distances[i]);
 #endif
     }
+    return ESP_OK;
 }
 
 #endif //ESPROVER_TOF_H
