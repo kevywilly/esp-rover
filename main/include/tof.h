@@ -75,7 +75,7 @@ static void tof_init_all() {
 
 static void tof_start_all() {
     for (int i = 0; i < NUM_TOF_SENSORS; i++) {
-        vl53l0x_startContinuous(&tof_sensors[i], 10);
+        vl53l0x_startContinuous(&tof_sensors[i],0);
     }
 }
 
