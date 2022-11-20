@@ -6,7 +6,7 @@
 #define ESPROVER_TOF_H
 
 #include <esp_log.h>
-#include "vl53l0x.hpp"
+#include "tof_sensor.hpp"
 #include "driver/i2c.h"
 
 #define I2C_MASTER_SCL_IO           22      /*!< GPIO number used for I2C master clock */
@@ -21,11 +21,11 @@
 #define TOF_START_ADDRESS 0x31
 
 static int tof_failures = 0;
-static vl53l0x_t tof_sensors[4] = {
-        {.port=I2C_MASTER_NUM, .address = 0x29,    .xshut = CONFIG_TOF0_XSHUT, .io_timeout = 100, .io_2v8 = 0 },
-        {.port=I2C_MASTER_NUM, .address = 0x29,    .xshut = CONFIG_TOF1_XSHUT, .io_timeout = 100, .io_2v8 = 0 },
-        {.port=I2C_MASTER_NUM, .address = 0x29,    .xshut = CONFIG_TOF2_XSHUT, .io_timeout = 100, .io_2v8 = 0 },
-        {.port=I2C_MASTER_NUM, .address = 0x29,    .xshut = CONFIG_TOF3_XSHUT, .io_timeout = 100, .io_2v8 = 0 }
+static TOFSensor tof_sensors[4] = {
+        TOFSensor(I2C_MASTER_NUM, 0X29, CONFIG_TOF0_XSHUT),
+        TOFSensor(I2C_MASTER_NUM, 0X29, CONFIG_TOF1_XSHUT),
+        TOFSensor(I2C_MASTER_NUM, 0X29, CONFIG_TOF2_XSHUT),
+        TOFSensor(I2C_MASTER_NUM, 0X29, CONFIG_TOF3_XSHUT)
 };
 
 static void tof_init_xshuts() {
@@ -57,10 +57,10 @@ static void tof_init_i2c() {
 
 }
 
-static void tof_init_one(vl53l0x_t * sensor, uint8_t new_addr) {
+static void tof_init_one(TOFSensor * sensor, uint8_t new_addr) {
     sensor->address = 0x29;
-    vl53l0x_init(sensor);
-    vl53l0x_setAddress(sensor, new_addr);
+    sensor->init();
+    sensor->setAddress(new_addr);
 }
 
 static void tof_init_all() {
@@ -75,7 +75,7 @@ static void tof_init_all() {
 
 static void tof_start_all() {
     for (int i = 0; i < NUM_TOF_SENSORS; i++) {
-        vl53l0x_startContinuous(&tof_sensors[i],0);
+        //tof_sensors[i].startContinuous(10);
     }
 }
 
@@ -88,8 +88,8 @@ static esp_err_t tof_read_all_avg(uint16_t *distances, uint8_t count, uint8_t ms
 
     for(int i=0; i < count; i++) {
         for (int i = 0; i < NUM_TOF_SENSORS; i++) {
-            uint16_t d = vl53l0x_readRangeContinuousMillimeters(&tof_sensors[i]);
-            if(d > 8191)
+            uint16_t d = tof_sensors[i].readRangeSingleMillimeters();
+            if(tof_sensors[i].did_timeout)
                 status = ESP_FAIL;
             distances[i] = distances[i] + d/count;
         }
@@ -99,8 +99,8 @@ static esp_err_t tof_read_all_avg(uint16_t *distances, uint8_t count, uint8_t ms
 }
 static esp_err_t tof_read_all(uint16_t *distances) {
     for (int i = 0; i < NUM_TOF_SENSORS; i++) {
-        uint16_t d = vl53l0x_readRangeContinuousMillimeters(&tof_sensors[i]);
-        if(d == 65535) {
+        uint16_t d = tof_sensors[i].readRangeSingleMillimeters();
+        if(tof_sensors[i].did_timeout) {
             tof_failures++;
             if(tof_failures >= 3) {
 #ifdef CONFIG_ESP_ROVER_DEBUG

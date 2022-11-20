@@ -30,7 +30,7 @@ static void proximity_print(proximity_t p) {
 
 proximity_t proximity_read() {
     uint16_t d[4];
-    tof_read_all(d);
+    tof_read_all_avg(d, 3, 10);
 
     proximity_t p;
     p.front_left = d[0];

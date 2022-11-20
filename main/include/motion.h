@@ -25,6 +25,7 @@ static void log_drive_command(drive_command_t *c) {
 
 #define MOTION_NUM_SERVOS 4
 
+
 static servo_t servos[MOTION_NUM_SERVOS] = {
         {.pwm_pin = (gpio_num_t)CONFIG_M0_PWM, .unit = MCPWM_UNIT_0, .timer = MCPWM_TIMER_0, .generator = MCPWM_GEN_A, .signal=MCPWM0A, .orientation = SERVO_ORIENTATION_NORMAL},
         {.pwm_pin = (gpio_num_t)CONFIG_M1_PWM, .unit = MCPWM_UNIT_0, .timer = MCPWM_TIMER_0, .generator = MCPWM_GEN_B, .signal=MCPWM0B, .orientation = SERVO_ORIENTATION_REVERSE},
