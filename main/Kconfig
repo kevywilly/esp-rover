@@ -1,5 +1,12 @@
 menu "ESP Rover Config"
 
+    config VL53L0X_DEBUG
+    bool "Low level debug"
+    default n
+    help
+        Low level debug
+
+
     config ESP_ROVER_DEBUG
     bool "Low level debug"
     default n

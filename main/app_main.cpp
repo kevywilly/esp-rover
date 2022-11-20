@@ -35,7 +35,7 @@ void init_network(httpd_handle_t * server) {
     ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &disconnect_handler, &server));
 }
 
-void app_main(void) {
+extern "C" void app_main(void) {
 
     static httpd_handle_t server = NULL;
 
@@ -45,9 +45,7 @@ void app_main(void) {
     auto_mode_queue = xQueueCreate(auto_mode_queue_len, sizeof(bool));
 
     xTaskCreatePinnedToCore(motion_task, "motion task", 4096, NULL, 2, NULL, TASK_CORE);
-    tof_init_all();
-    tof_start_all();
-    //xTaskCreatePinnedToCore(autodrive_task, "autodrive", 4096, NULL, 1, NULL, TASK_CORE);
+    xTaskCreatePinnedToCore(autodrive_task, "autodrive", 4096, NULL, 1, NULL, TASK_CORE);
 
     start_webserver();
 

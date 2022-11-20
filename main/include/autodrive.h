@@ -10,12 +10,13 @@
 #include "tof.h"
 #include "motion.h"
 #include "esp_err.h"
+#include "proximity.h"
 
 #define MAX_OF(A, B) ((A) > (B) ? (B) : (A))
 #define MIN_OF(A, B) ((B) < (A) ? (B) : (A))
 
-#define MEDIAL_BLOCKED 400
-#define LATERAL_BLOCKED  400
+#define MEDIAL_BLOCKED 380
+#define LATERAL_BLOCKED  250
 
 typedef struct {
     uint16_t front;
@@ -45,11 +46,12 @@ typedef struct {
 #define T_RIGHT (-1)
 #define T_NONE 0
 #define T_LEFT 1
+#define DRIVE_POWER 0.3
 
 static esp_err_t get_obstacles(obstacle_t *o) {
 
     uint16_t d[NUM_TOF_SENSORS];
-    esp_err_t status = tof_read_all(d);
+    esp_err_t status = tof_read_all_avg(d, 3, 20);
 
     if(status != ESP_OK) {
         return status;
@@ -93,7 +95,7 @@ static esp_err_t get_obstacles(obstacle_t *o) {
                 turn_dir = T_LEFT;
             }
         }
-        o->cmd = (drive_command_t) {H_BACKWARD, 0.0, turn_dir};
+        o->cmd = (drive_command_t) {0.0, H_BACKWARD,turn_dir};
         o->avoiding = true;
     }
 
@@ -103,18 +105,18 @@ static esp_err_t get_obstacles(obstacle_t *o) {
 
     if (o->right_blocked || o->left_blocked) {
         if (!o->left_blocked) {
-            o->cmd = (drive_command_t) {(H_LEFT + H_FORWARD) / 2, 0.8, 0.0};
+            o->cmd = (drive_command_t) { DRIVE_POWER, (H_LEFT + H_FORWARD) / 2,0.0};
             return status;
         } else if (!o->right_blocked) {
-            o->cmd = (drive_command_t) {(H_RIGHT + H_FORWARD) / 2, 0.8, 0.0};
+            o->cmd = (drive_command_t) {DRIVE_POWER, (H_RIGHT + H_FORWARD) / 2, 0.0};
             return status;
         } else {
-            o->cmd = (drive_command_t) {H_FORWARD, 0.8, 0.0};
+            o->cmd = (drive_command_t) { DRIVE_POWER, H_FORWARD,0.0};
         }
     }
 
     o->result = "ALL CLEAR";
-    o->cmd = (drive_command_t) {H_FORWARD, 1.0, T_NONE};
+    o->cmd = (drive_command_t) {DRIVE_POWER,H_FORWARD, T_NONE};
 
     return status;
 
@@ -124,12 +126,19 @@ static void printObstacles(obstacle_t o) {
 #ifdef CONFIG_ESP_ROVER_DEBUG
     ESP_LOGI(TAG, "Distances (%d, %d, %d, %d)", o.front_left, o.front_right, o.right, o.left);
     ESP_LOGI(TAG, "AvoidMode? %s", o.avoiding ? "Yes" : "No");
-    ESP_LOGI(TAG, "Command: (%f, %f, %f)", o.cmd.heading, o.cmd.power, o.cmd.turn);
+    ESP_LOGI(TAG, "Command: (%f, %f, %f)", o.cmd.power, o.cmd.heading, o.cmd.turn);
+#endif
+}
+
+
+static void printCmd(drive_command_t cmd) {
+#ifdef CONFIG_ESP_ROVER_DEBUG
+      ESP_LOGI(TAG, "Command: (%f, %f, %f)", cmd.heading, cmd.power, cmd.turn);
 #endif
 }
 
 void autodrive_stop() {
-    drive_command_t cmd = (drive_command_t) {.heading=90, .power = 0, .turn = 0.0};
+    drive_command_t cmd = (drive_command_t) {0,90,0};
     xQueueSend(drive_queue, &cmd, 10);
 }
 
@@ -148,11 +157,23 @@ void autodrive_task(void *args) {
             autodrive_stop();
         }
 
+        if(auto_mode) {
+            auto_mode = (proximity_auto() == ESP_OK);
+        } else {
+            proximity_read();
+        }
+        /*
+        //drive_command_t cmd = proximity_get_cmd();
+        //printCmd(cmd);
+
+        bool am = auto_mode;
         if(get_obstacles(&o) != ESP_OK) {
             ESP_LOGI(TAG, "TOF Failure - restarting tofs");
             autodrive_stop();
             tof_init_all();
+            tof_start_all();
             vTaskDelay(pdMS_TO_TICKS(1000));
+            auto_mode = am;
             if(get_obstacles(&o) != ESP_OK) {
                 auto_mode = false;
             };
@@ -160,11 +181,12 @@ void autodrive_task(void *args) {
 
         printObstacles(o);
 
+
         if (auto_mode) {
             xQueueSend(drive_queue, &o.cmd, 10);
         }
-
-        vTaskDelay(pdMS_TO_TICKS(20));
+        */
+        vTaskDelay(pdMS_TO_TICKS(150));
     }
 
     vTaskDelete(NULL);

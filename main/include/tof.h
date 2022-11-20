@@ -6,7 +6,7 @@
 #define ESPROVER_TOF_H
 
 #include <esp_log.h>
-#include "vl53l0x.h"
+#include "vl53l0x.hpp"
 #include "driver/i2c.h"
 
 #define I2C_MASTER_SCL_IO           22      /*!< GPIO number used for I2C master clock */
@@ -22,15 +22,15 @@
 
 static int tof_failures = 0;
 static vl53l0x_t tof_sensors[4] = {
-        {.xshut = CONFIG_TOF0_XSHUT, .address = 0x29, .port=I2C_MASTER_NUM, .io_2v8 = 0, .io_timeout = 100},
-        {.xshut = CONFIG_TOF1_XSHUT, .address = 0x29, .port=I2C_MASTER_NUM, .io_2v8 = 0, .io_timeout = 100},
-        {.xshut = CONFIG_TOF2_XSHUT, .address = 0x29, .port=I2C_MASTER_NUM, .io_2v8 = 0, .io_timeout = 100},
-        {.xshut = CONFIG_TOF3_XSHUT, .address = 0x29, .port=I2C_MASTER_NUM, .io_2v8 = 0, .io_timeout = 100}
+        {.port=I2C_MASTER_NUM, .address = 0x29,    .xshut = CONFIG_TOF0_XSHUT, .io_timeout = 100, .io_2v8 = 0 },
+        {.port=I2C_MASTER_NUM, .address = 0x29,    .xshut = CONFIG_TOF1_XSHUT, .io_timeout = 100, .io_2v8 = 0 },
+        {.port=I2C_MASTER_NUM, .address = 0x29,    .xshut = CONFIG_TOF2_XSHUT, .io_timeout = 100, .io_2v8 = 0 },
+        {.port=I2C_MASTER_NUM, .address = 0x29,    .xshut = CONFIG_TOF3_XSHUT, .io_timeout = 100, .io_2v8 = 0 }
 };
 
 static void tof_init_xshuts() {
     for (int i = 0; i < NUM_TOF_SENSORS; i++) {
-        gpio_num_t pin = tof_sensors[i].xshut;
+        gpio_num_t pin = (gpio_num_t)tof_sensors[i].xshut;
         gpio_reset_pin(pin);
         gpio_set_direction(pin, GPIO_MODE_OUTPUT);
         gpio_set_drive_capability(pin, GPIO_DRIVE_CAP_3);
@@ -46,8 +46,8 @@ static void tof_init_i2c() {
             .scl_io_num = I2C_MASTER_SCL_IO,
             .sda_pullup_en = GPIO_PULLUP_ENABLE,
             .scl_pullup_en = GPIO_PULLUP_ENABLE,
-            .master.clk_speed = 100000 //I2C_MASTER_FREQ_HZ,
     };
+    conf.master.clk_speed = 100000;
 
     ESP_ERROR_CHECK(i2c_param_config(I2C_MASTER_NUM, &conf));
     ESP_ERROR_CHECK(
@@ -79,6 +79,24 @@ static void tof_start_all() {
     }
 }
 
+
+static esp_err_t tof_read_all_avg(uint16_t *distances, uint8_t count, uint8_t ms) {
+    for(int i=0; i < NUM_TOF_SENSORS; i++) {
+        distances[i] = 0;
+    }
+    esp_err_t status = ESP_OK;
+
+    for(int i=0; i < count; i++) {
+        for (int i = 0; i < NUM_TOF_SENSORS; i++) {
+            uint16_t d = vl53l0x_readRangeContinuousMillimeters(&tof_sensors[i]);
+            if(d > 8191)
+                status = ESP_FAIL;
+            distances[i] = distances[i] + d/count;
+        }
+        usleep(ms*1000);
+    }
+    return ESP_OK;
+}
 static esp_err_t tof_read_all(uint16_t *distances) {
     for (int i = 0; i < NUM_TOF_SENSORS; i++) {
         uint16_t d = vl53l0x_readRangeContinuousMillimeters(&tof_sensors[i]);
