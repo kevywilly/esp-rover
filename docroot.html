@@ -78,6 +78,7 @@
             font-size: 1.5rem;
             text-align: center;
             min-height: 2.5rem;
+            padding-top: 4px;
         }
 
         .auto-container {
@@ -91,7 +92,7 @@
             margin: auto;
             width: 100%;
             height: 240px;
-            top: 80px;
+            top: 100px;
             text-align: center;
         }
         .auto-btn {
@@ -126,10 +127,9 @@
 <body>
 <h1>ESP Rover</h1>
 <div>
-    <div class="results" id="results"></div>
-
     <div class="video-container">
         <embed type="multipart/x-mixed-replace" src="http://espcamera.lan:81/stream" width="320" height="240">
+        <div class="results" id="results"></div>
         <div class="auto-container">
             <button class="auto-btn" onclick="toggle_auto();">Toggle Auto Drive</button>
         </div>
@@ -153,12 +153,14 @@
     });
     joy.on('move', function (evt, data) {
         _power = data.distance / (btnSize / 2.0);
-        _heading = _power === 0 ? 0.0 : data.angle.degree; //Math.round(data.angle.degree/15)*15;
+        _heading = _power === 0 ? 0.0 : Math.round(data.angle.degree/45)*45; //data.angle.degree; //Math.round(data.angle.degree/15)*15;
+        _heading = _heading < 360 ? _heading : 0;
         display_data();
     });
     joy.on('end', function (evt, data) {
         _power = 0.0;
         _heading = 0.0;
+        display_data();
     });
 
     let joy2 = nipplejs.create({

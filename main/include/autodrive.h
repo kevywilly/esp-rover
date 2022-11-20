@@ -14,8 +14,8 @@
 #define MAX_OF(A, B) ((A) > (B) ? (B) : (A))
 #define MIN_OF(A, B) ((B) < (A) ? (B) : (A))
 
-#define MEDIAL_BLOCKED 500
-#define LATERAL_BLOCKED  200
+#define MEDIAL_BLOCKED 400
+#define LATERAL_BLOCKED  400
 
 typedef struct {
     uint16_t front;
@@ -54,6 +54,7 @@ static esp_err_t get_obstacles(obstacle_t *o) {
     if(status != ESP_OK) {
         return status;
     }
+
     o->front_left = d[0];
     o->front_right = d[1];
     o->right = d[2];
