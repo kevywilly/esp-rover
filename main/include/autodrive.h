@@ -9,12 +9,13 @@
 #include "freertos/task.h"
 #include "tof.h"
 #include "motion.h"
+#include "esp_err.h"
 
 #define MAX_OF(A, B) ((A) > (B) ? (B) : (A))
 #define MIN_OF(A, B) ((B) < (A) ? (B) : (A))
 
-#define MEDIAL_BLOCKED 500
-#define LATERAL_BLOCKED  200
+#define MEDIAL_BLOCKED 400
+#define LATERAL_BLOCKED  400
 
 typedef struct {
     uint16_t front;
@@ -45,10 +46,14 @@ typedef struct {
 #define T_NONE 0
 #define T_LEFT 1
 
-static void get_obstacles(obstacle_t *o) {
+static esp_err_t get_obstacles(obstacle_t *o) {
 
-    uint32_t d[NUM_TOF_SENSORS];
-    tof_read_all(d);
+    uint16_t d[NUM_TOF_SENSORS];
+    esp_err_t status = tof_read_all(d);
+
+    if(status != ESP_OK) {
+        return status;
+    }
 
     o->front_left = d[0];
     o->front_right = d[1];
@@ -93,16 +98,16 @@ static void get_obstacles(obstacle_t *o) {
     }
 
     if (o->avoiding) {
-        return;
+        return status;
     }
 
     if (o->right_blocked || o->left_blocked) {
         if (!o->left_blocked) {
             o->cmd = (drive_command_t) {(H_LEFT + H_FORWARD) / 2, 0.8, 0.0};
-            return;
+            return status;
         } else if (!o->right_blocked) {
             o->cmd = (drive_command_t) {(H_RIGHT + H_FORWARD) / 2, 0.8, 0.0};
-            return;
+            return status;
         } else {
             o->cmd = (drive_command_t) {H_FORWARD, 0.8, 0.0};
         }
@@ -111,6 +116,7 @@ static void get_obstacles(obstacle_t *o) {
     o->result = "ALL CLEAR";
     o->cmd = (drive_command_t) {H_FORWARD, 1.0, T_NONE};
 
+    return status;
 
 }
 
@@ -125,12 +131,13 @@ static void printObstacles(obstacle_t o) {
 void autodrive_stop() {
     drive_command_t cmd = (drive_command_t) {.heading=90, .power = 0, .turn = 0.0};
     xQueueSend(drive_queue, &cmd, 10);
-
 }
 
 void autodrive_task(void *args) {
 
     tof_init_all();
+    tof_start_all();
+
     uint8_t mode_request = 0;
     bool auto_mode = false;
     obstacle_t o;
@@ -140,7 +147,17 @@ void autodrive_task(void *args) {
             auto_mode = !auto_mode;
             autodrive_stop();
         }
-        get_obstacles(&o);
+
+        if(get_obstacles(&o) != ESP_OK) {
+            ESP_LOGI(TAG, "TOF Failure - restarting tofs");
+            autodrive_stop();
+            tof_init_all();
+            vTaskDelay(pdMS_TO_TICKS(1000));
+            if(get_obstacles(&o) != ESP_OK) {
+                auto_mode = false;
+            };
+        }
+
         printObstacles(o);
 
         if (auto_mode) {

@@ -47,6 +47,8 @@ static void servo_spin(servo_t *servo, float power) {
 
     float duty = power == 0 ? 0.0 : (servo_zero + power * servo_duty_factor) / 200.0;  // (100/20000)
 
+    //duty = duty * (CONFIG_ESP_ROVER_MAX_POWER / 100.0);
+
     // set duty 50, 100, etc.  not .50, 1.0
     mcpwm_set_duty(
             servo->unit,

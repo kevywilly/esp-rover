@@ -6,6 +6,10 @@ menu "ESP Rover Config"
     help
         Low level debug
 
+    config ESP_ROVER_MAX_POWER
+        int "max power pct"
+        default 80
+
     menu "ESP Rover TOF CONFIG"
         config TOF0_XSHUT
             int "tof0 xshut"
@@ -24,16 +28,16 @@ menu "ESP Rover Config"
     menu "ESP Rover PWM Config"
         config M0_PWM
                int "Motor 0 PWM pin"
-               default 27
+               default 23
         config M1_PWM
                 int "Motor 1 PWM Pin"
-                default 33
+                default 27
         config M2_PWM
                 int "Motor 2 PWM Pin"
-                default 23
+                default 4
         config M3_PWM
                 int "Motor 3 PWM Pin"
-                default 4
+                default 33
     endmenu
 
     menu "ESP Rover Commands and Parameters"
