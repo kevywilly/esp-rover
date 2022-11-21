@@ -26,15 +26,15 @@ static esp_err_t process_move_request(cJSON *root) {
     double power = cJSON_GetObjectItem(root, CONFIG_POWER_PARAM_NAME)->valuedouble;
     double turn = cJSON_GetObjectItem(root, CONFIG_TURN_PARAM_NAME)->valuedouble;
     drive_command_t cmd = {.power = power, .heading = heading, .turn = turn};
-    xQueueSend(drive_queue, &cmd, 10);
+    xQueueSend(xQueueDriveFrame, &cmd, 10);
     return ESP_OK;
 }
 
 static esp_err_t process_auto_mode() {
     uint8_t cmd = 1;
     drive_command_t dt = {.power = 0, .heading = 0, .turn = 0};
-    xQueueSend(auto_mode_queue, &cmd, 10);
-    xQueueSend(drive_queue, &dt, 10);
+    xQueueSend(xQueueAutoDriveFrame, &cmd, 10);
+    xQueueSend(xQueueDriveFrame, &dt, 10);
     return ESP_OK;
 }
 

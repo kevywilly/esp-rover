@@ -2,8 +2,8 @@
 // Created by Kevin Williams on 11/20/22.
 //
 
-#ifndef ESPROVER_TOF_SENSOR_HPP
-#define ESPROVER_TOF_SENSOR_HPP
+#ifndef ESPROVER_VL53L0X_HPP
+#define ESPROVER_VL53L0X_HPP
 
 #include <stdio.h>
 #include <driver/i2c.h>
@@ -129,9 +129,9 @@ enum
 typedef enum
 { VcselPeriodPreRange, VcselPeriodFinalRange } vcselPeriodType;
 
-class TOFSensor {
+class VL53L0X {
 public:
-    TOFSensor(uint8_t port, uint8_t address, uint8_t xshut);
+    VL53L0X(uint8_t port, uint8_t address, uint8_t xshut);
     const char * init();
     uint16_t readRangeContinuousMillimeters ();
     uint16_t readRangeSingleMillimeters ();
@@ -172,31 +172,36 @@ private:
     // Record the current time to check an upcoming timeout against
     inline void startTimeout() {timeout_start_ms = millis();}
 
-    // Encode VCSEL pulse period register value from period in PCLKs
-    // based on VL53L0X_encode_vcsel_period()
-    static uint8_t encodeVcselPeriod(uint8_t period_pclks) {return ((period_pclks) >> 1) - 1;}
-
     inline bool checkTimeoutExpired() {
         // Check if timeout is enabled (set to nonzero value) and has expired
         return (io_timeout > 0 && ((uint16_t)(millis() - timeout_start_ms)) > io_timeout);
     }
 
-    // Decode VCSEL (vertical cavity surface emitting laser) pulse period in PCLKs
-    // from register value
-    // based on VL53L0X_decode_vcsel_period()
+    esp_err_t Done(i2c_cmd_handle_t i);
+    i2c_cmd_handle_t Read(uint8_t reg);
+
+    i2c_cmd_handle_t Write(uint8_t reg);
+
+    // Encode VCSEL pulse period register value from period in PCLKs
+// based on VL53L0X_encode_vcsel_period()
+    static uint8_t encodeVcselPeriod(uint8_t period_pclks) {return ((period_pclks) >> 1) - 1;}
+
+// Decode VCSEL (vertical cavity surface emitting laser) pulse period in PCLKs
+// from register value
+// based on VL53L0X_decode_vcsel_period()
     static uint8_t decodeVcselPeriod(uint8_t reg_val) { return (((reg_val) + 1) << 1); }
 
-    // Calculate macro period in *nanoseconds* from VCSEL period in PCLKs
-    // based on VL53L0X_calc_macro_period_ps()
-    // PLL_period_ps = 1655; macro_period_vclks = 2304
+// Calculate macro period in *nanoseconds* from VCSEL period in PCLKs
+// based on VL53L0X_calc_macro_period_ps()
+// PLL_period_ps = 1655; macro_period_vclks = 2304
     static uint32_t calcMacroPeriod(uint32_t vcsel_period_pclks) {
         return ((((uint32_t) 2304 * (vcsel_period_pclks) * 1655) + 500) / 1000);
     }
 
-    // Decode sequence step timeout in MCLKs from register value
-    // based on VL53L0X_decode_timeout()
-    // Note: the original function returned a uint32_t, but the return value is
-    // always stored in a uint16_t.
+// Decode sequence step timeout in MCLKs from register value
+// based on VL53L0X_decode_timeout()
+// Note: the original function returned a uint32_t, but the return value is
+// always stored in a uint16_t.
     static uint16_t decodeTimeout (uint16_t reg_val)
     {
         // format: "(LSByte * 2^MSByte) + 1"
@@ -210,10 +215,10 @@ private:
         return ((timeout_period_mclks * macro_period_ns) + (macro_period_ns / 2)) / 1000;
     }
 
-    // Encode sequence step timeout register value from timeout in MCLKs
-    // based on VL53L0X_encode_timeout()
-    // Note: the original function took a uint16_t, but the argument passed to it
-    // is always a uint16_t.
+// Encode sequence step timeout register value from timeout in MCLKs
+// based on VL53L0X_encode_timeout()
+// Note: the original function took a uint16_t, but the argument passed to it
+// is always a uint16_t.
     static uint16_t encodeTimeout (uint16_t timeout_mclks)
     {
         // format: "(LSByte * 2^MSByte) + 1"
@@ -238,7 +243,7 @@ private:
         }
     }
 
-    // Convert sequence step timeout from microseconds to MCLKs with given VCSEL period in PCLKs
+// Convert sequence step timeout from microseconds to MCLKs with given VCSEL period in PCLKs
 // based on VL53L0X_calc_timeout_mclks()
     static uint32_t timeoutMicrosecondsToMclks (uint32_t timeout_period_us, uint8_t vcsel_period_pclks)
     {
@@ -246,7 +251,8 @@ private:
 
         return (((timeout_period_us * 1000) + (macro_period_ns / 2)) / macro_period_ns);
     }
-    
+
+
 public:
     uint8_t port;
     uint8_t address;
@@ -264,37 +270,10 @@ private:
 
 };
 
-static esp_err_t
-Done (TOFSensor * v, i2c_cmd_handle_t i)
-{
-    i2c_master_stop (i);
-    esp_err_t err = i2c_master_cmd_begin (v->port, i, TIMEOUT);
-    if (err)
-        v->i2c_fail = 1;
-    i2c_cmd_link_delete (i);
-#ifdef tBUF
-    usleep (tBUF);
-#endif
-    return err;
-}
 
-static i2c_cmd_handle_t Read (TOFSensor * v, uint8_t reg) {                               // Set up for read
-    i2c_cmd_handle_t i = i2c_cmd_link_create ();
-    i2c_master_start (i);
-    i2c_master_write_byte (i, (v->address << 1), 1);
-    i2c_master_write_byte (i, reg, 1);
-    Done (v, i);
-    i = i2c_cmd_link_create ();
-    i2c_master_start (i);
-    i2c_master_write_byte (i, (v->address << 1) + 1, 1);
-    return i;
-}
 
-static i2c_cmd_handle_t Write (TOFSensor * v, uint8_t reg) {                               // Set up for write
-    i2c_cmd_handle_t i = i2c_cmd_link_create ();
-    i2c_master_start (i);
-    i2c_master_write_byte (i, (v->address << 1), 1);
-    i2c_master_write_byte (i, reg, 1);
-    return i;
-}
-#endif //ESPROVER_TOF_SENSOR_HPP
+
+
+
+
+#endif //ESPROVER_VL53L0X_HPP

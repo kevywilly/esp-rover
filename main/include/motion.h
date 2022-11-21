@@ -9,7 +9,7 @@
 #include "globals.h"
 #include "freertos/queue.h"
 #include "esp_log.h"
-#include "servo.h"
+#include "servo.hpp"
 
 typedef struct {
     double power;
@@ -26,11 +26,11 @@ static void log_drive_command(drive_command_t *c) {
 #define MOTION_NUM_SERVOS 4
 
 
-static servo_t servos[MOTION_NUM_SERVOS] = {
-        {.pwm_pin = (gpio_num_t)CONFIG_M0_PWM, .unit = MCPWM_UNIT_0, .timer = MCPWM_TIMER_0, .generator = MCPWM_GEN_A, .signal=MCPWM0A, .orientation = SERVO_ORIENTATION_NORMAL},
-        {.pwm_pin = (gpio_num_t)CONFIG_M1_PWM, .unit = MCPWM_UNIT_0, .timer = MCPWM_TIMER_0, .generator = MCPWM_GEN_B, .signal=MCPWM0B, .orientation = SERVO_ORIENTATION_REVERSE},
-        {.pwm_pin = (gpio_num_t)CONFIG_M2_PWM, .unit = MCPWM_UNIT_1, .timer = MCPWM_TIMER_1, .generator = MCPWM_GEN_A, .signal=MCPWM1A, .orientation = SERVO_ORIENTATION_REVERSE},
-        {.pwm_pin = (gpio_num_t)CONFIG_M3_PWM, .unit = MCPWM_UNIT_1, .timer = MCPWM_TIMER_1, .generator = MCPWM_GEN_B, .signal=MCPWM1B, .orientation = SERVO_ORIENTATION_NORMAL}
+static Servo servos[MOTION_NUM_SERVOS] = {
+        Servo((gpio_num_t)CONFIG_M0_PWM, MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_GEN_A, MCPWM0A, SERVO_ORIENTATION_NORMAL, SERVO_MIN_US, SERVO_MAX_US, -360, 360),
+        Servo((gpio_num_t)CONFIG_M1_PWM, MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_GEN_B, MCPWM0B, SERVO_ORIENTATION_REVERSE, SERVO_MIN_US, SERVO_MAX_US, -360, 360),
+        Servo((gpio_num_t)CONFIG_M2_PWM, MCPWM_UNIT_0, MCPWM_TIMER_1, MCPWM_GEN_A, MCPWM1A, SERVO_ORIENTATION_REVERSE, SERVO_MIN_US, SERVO_MAX_US, -360, 360),
+        Servo((gpio_num_t)CONFIG_M3_PWM, MCPWM_UNIT_0, MCPWM_TIMER_1, MCPWM_GEN_B, MCPWM1B, SERVO_ORIENTATION_NORMAL, SERVO_MIN_US, SERVO_MAX_US, -360, 360)
 };
 
 double abs_max(float *values, int size) {
@@ -45,7 +45,7 @@ double abs_max(float *values, int size) {
 
 static void motion_init() {
     for (int i = 0; i < MOTION_NUM_SERVOS; i++) {
-        servo_init(&servos[i]);
+        servos[i].init();
     }
 }
 
@@ -69,7 +69,7 @@ void motion_apply2(drive_command_t request) {
     }
 
     for (int i = 0; i < 4; i++) {
-        servo_spin(&servos[i], values[i]*request.power);
+        servos[i].spin(values[i]*request.power);
     }
 }
 void motion_apply(drive_command_t request) {
@@ -102,7 +102,7 @@ void motion_apply(drive_command_t request) {
     adj = max_val > 1.0 ? 1.0 / max_val : 1.0;
 
     for (i = 0; i < 4; i++) {
-        servo_spin(&servos[i], values[i] * adj);
+        servos[i].spin(values[i] * adj);
     }
 }
 
@@ -113,7 +113,7 @@ static void motion_task(void *args) {
     drive_command_t driveCmd = {0, 0, 0};
 
     while (1) {
-        if (xQueueReceive(drive_queue, (void *) &driveCmd, 0) == pdTRUE) {
+        if (xQueueReceive(xQueueDriveFrame, (void *) &driveCmd, 0) == pdTRUE) {
             log_drive_command(&driveCmd);
             motion_apply(driveCmd);
         }

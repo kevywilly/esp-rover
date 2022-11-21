@@ -6,7 +6,7 @@
 #define ESPROVER_TOF_H
 
 #include <esp_log.h>
-#include "tof_sensor.hpp"
+#include "vl53l0x.hpp"
 #include "driver/i2c.h"
 
 #define I2C_MASTER_SCL_IO           22      /*!< GPIO number used for I2C master clock */
@@ -21,11 +21,11 @@
 #define TOF_START_ADDRESS 0x31
 
 static int tof_failures = 0;
-static TOFSensor tof_sensors[4] = {
-        TOFSensor(I2C_MASTER_NUM, 0X29, CONFIG_TOF0_XSHUT),
-        TOFSensor(I2C_MASTER_NUM, 0X29, CONFIG_TOF1_XSHUT),
-        TOFSensor(I2C_MASTER_NUM, 0X29, CONFIG_TOF2_XSHUT),
-        TOFSensor(I2C_MASTER_NUM, 0X29, CONFIG_TOF3_XSHUT)
+static VL53L0X tof_sensors[4] = {
+        VL53L0X(I2C_MASTER_NUM, 0X29, CONFIG_TOF0_XSHUT),
+        VL53L0X(I2C_MASTER_NUM, 0X29, CONFIG_TOF1_XSHUT),
+        VL53L0X(I2C_MASTER_NUM, 0X29, CONFIG_TOF2_XSHUT),
+        VL53L0X(I2C_MASTER_NUM, 0X29, CONFIG_TOF3_XSHUT)
 };
 
 static void tof_init_xshuts() {
@@ -57,7 +57,7 @@ static void tof_init_i2c() {
 
 }
 
-static void tof_init_one(TOFSensor * sensor, uint8_t new_addr) {
+static void tof_init_one(VL53L0X * sensor, uint8_t new_addr) {
     sensor->address = 0x29;
     sensor->init();
     sensor->setAddress(new_addr);

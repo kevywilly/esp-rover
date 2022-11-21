@@ -46,7 +46,7 @@ proximity_t proximity_read() {
 }
 void proximity_apply(float power, float heading, float turn) {
     drive_command_t cmd = {power, heading, turn};
-    xQueueSend(drive_queue, &cmd, 10);
+    xQueueSend(xQueueDriveFrame, &cmd, 10);
 }
 
 bool proximity_front_clear(proximity_t * p) {
@@ -76,7 +76,7 @@ esp_err_t proximity_wait_until(bool (*fn)(proximity_t *)) {
         p = proximity_read();
         usleep(20*1000);
 
-        if (xQueueReceive(auto_mode_queue, (void *) &mode_request, 0) == pdTRUE) {
+        if (xQueueReceive(xQueueAutoDriveFrame, (void *) &mode_request, 0) == pdTRUE) {
             proximity_apply(0,0,0);
             return ESP_FAIL;
         }

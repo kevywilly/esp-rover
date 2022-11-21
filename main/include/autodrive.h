@@ -139,7 +139,7 @@ static void printCmd(drive_command_t cmd) {
 
 void autodrive_stop() {
     drive_command_t cmd = (drive_command_t) {0,90,0};
-    xQueueSend(drive_queue, &cmd, 10);
+    xQueueSend(xQueueDriveFrame, &cmd, 10);
 }
 
 void autodrive_task(void *args) {
@@ -152,7 +152,7 @@ void autodrive_task(void *args) {
     obstacle_t o;
 
     while (1) {
-        if (xQueueReceive(auto_mode_queue, (void *) &mode_request, 0) == pdTRUE) {
+        if (xQueueReceive(xQueueAutoDriveFrame, (void *) &mode_request, 0) == pdTRUE) {
             auto_mode = !auto_mode;
             autodrive_stop();
         }
