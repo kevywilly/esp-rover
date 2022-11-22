@@ -5,7 +5,7 @@
 #include <thread>
 #include "vl53l0x.hpp"
 
-VL53L0X::VL53L0X(uint8_t port, uint8_t address, uint8_t xshut) : port(port), address(address), xshut(xshut) {
+VL53L0X::VL53L0X(uint8_t port, uint8_t address, gpio_num_t xshut) : port(port), address(address), xshut(xshut) {
     io_2v8 = 1;
     did_timeout = 0;
     i2c_fail = 0;

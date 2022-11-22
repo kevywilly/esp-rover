@@ -19,6 +19,8 @@
 #define TOF_SENSOR_LOG(tag,...) err=err;
 #endif
 
+#define VL53L0X_DEFAULT_ADDRESS 0x29
+
 typedef struct
 {
     uint8_t tcc:1;
@@ -131,7 +133,7 @@ typedef enum
 
 class VL53L0X {
 public:
-    VL53L0X(uint8_t port, uint8_t address, uint8_t xshut);
+    VL53L0X(uint8_t port, uint8_t address, gpio_num_t xshut);
     const char * init();
     uint16_t readRangeContinuousMillimeters ();
     uint16_t readRangeSingleMillimeters ();
@@ -256,7 +258,7 @@ private:
 public:
     uint8_t port;
     uint8_t address;
-    uint8_t xshut;
+    gpio_num_t xshut;
     uint16_t io_timeout;
     uint8_t io_2v8:1;
     uint8_t did_timeout:1;

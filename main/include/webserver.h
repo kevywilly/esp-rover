@@ -20,6 +20,9 @@
 #include "docroot.h"
 #include <sys/param.h>
 #include "freertos/queue.h"
+#include "app_drive.hpp"
+
+static const char *TAG = "ESP Web";
 
 static esp_err_t process_move_request(cJSON *root) {
     double heading = cJSON_GetObjectItem(root, CONFIG_HEADING_PARAM_NAME)->valuedouble;
@@ -46,18 +49,6 @@ static esp_err_t process_request(cJSON *root) {
     } else if (strcmp(cmd, CONFIG_AUTO_DRIVE_COMMAND) == 0) {
         return process_auto_mode();
     }
-    return ESP_OK;
-}
-
-
-static esp_err_t tof_get_handler(httpd_req_t *req) {
-    uint16_t d[4];
-    tof_read_all(d);
-
-    httpd_resp_set_type(req, HTTPD_TYPE_JSON);
-    char resp[500];
-    sprintf(resp, "[%d, %d, %d, %d]", d[0], d[1], d[2], d[3]);
-    httpd_resp_send(req, (const char *) resp, strlen(resp));
     return ESP_OK;
 }
 
@@ -131,12 +122,6 @@ static httpd_handle_t start_webserver() {
             .user_ctx  = NULL
     };
 
-    httpd_uri_t tof_get_uri = {
-            .uri       = "/api/tof",
-            .method    = HTTP_GET,
-            .handler   = tof_get_handler,
-            .user_ctx  = NULL
-    };
 
     // Start the httpd server
     ESP_LOGI(TAG, "Starting server on port: '%d'", config.server_port);
@@ -145,7 +130,6 @@ static httpd_handle_t start_webserver() {
         ESP_LOGI(TAG, "Registering URI handlers");
         httpd_register_uri_handler(server, &home_get_uri);
         httpd_register_uri_handler(server, &api_post_uri);
-        httpd_register_uri_handler(server, &tof_get_uri);
         return server;
     }
 

@@ -19,17 +19,21 @@ menu "ESP Rover Config"
 
     menu "ESP Rover TOF CONFIG"
         config TOF0_XSHUT
-            int "tof0 xshut"
-            default 18
+             int "tof0 xshut"
+             default 14
         config TOF1_XSHUT
             int "tof1 xshut"
-            default 19
+            default 26
         config TOF2_XSHUT
             int "tof2 xshut"
-            default 22
+            default 25
         config TOF3_XSHUT
             int "tof3 xshut"
-            default 0
+            default 19
+        config TOF4_XSHUT
+            int "tof3 xshut"
+            default 18
+
     endmenu
 
     menu "ESP Rover PWM Config"

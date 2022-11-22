@@ -12,12 +12,9 @@
 #define RADIANS 0.0174533
 #endif
 
-static const char *TAG = "ESP Rover";
 
 //static httpd_handle_t server = NULL;
-static const double ROTATION_MATRIX[4] = {-1.0, 1.0, 1.0, -1.0};
-static const int drive_queue_len = 5;
-static const int auto_mode_queue_len = 2;
+
 static QueueHandle_t xQueueDriveFrame;
 static QueueHandle_t xQueueAutoDriveFrame;
 

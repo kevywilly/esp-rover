@@ -15,10 +15,13 @@
 
 #include <protocol_examples_common.h>
 #include "globals.h"
-#include "autodrive.h"
 #include "webserver.h"
-#include "motion.h"
 #include "app_vision.hpp"
+#include "app_auto_drive.hpp"
+#include "app_drive.hpp"
+
+static const int drive_queue_len = 5;
+static const int auto_mode_queue_len = 2;
 
 #define TASK_CORE 1
 
@@ -42,14 +45,19 @@ extern "C" void app_main(void) {
 
     init_network(&server);
 
-    AppVision vision;
-    vision.init();
-
     xQueueDriveFrame = xQueueCreate(drive_queue_len, sizeof(drive_command_t));
     xQueueAutoDriveFrame = xQueueCreate(auto_mode_queue_len, sizeof(bool));
 
-    xTaskCreatePinnedToCore(motion_task, "motion task", 4096, NULL, 2, NULL, TASK_CORE);
-    xTaskCreatePinnedToCore(autodrive_task, "autodrive", 4096, NULL, 1, NULL, TASK_CORE);
+    AppVision * vision = new AppVision();
+    AppDrive * appDrive = new AppDrive(xQueueDriveFrame);
+    AppAutoDrive * proximity = new AppAutoDrive(xQueueDriveFrame, xQueueAutoDriveFrame);
+
+    vision->run();
+    appDrive->run();
+    proximity->run();
+
+
+    //xTaskCreatePinnedToCore(motion_task, "motion task", 4096, NULL, 2, NULL, TASK_CORE);
 
     start_webserver();
 
