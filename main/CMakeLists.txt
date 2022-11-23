@@ -5,7 +5,6 @@ set(SOURCES
         src/app_vision.cpp
         src/app_auto_drive.cpp
         src/app_drive.cpp
-        src/proximity.cpp
         )
 idf_component_register(SRCS ${SOURCES}
         INCLUDE_DIRS

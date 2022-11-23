@@ -6,6 +6,7 @@
 #define ESPROVER_PROXIMITY_HPP
 
 #include "stdio.h"
+#include "tof_sensor.hpp"
 
 #define P_OK 400
 
@@ -18,8 +19,8 @@
 class Proximity {
 public:
 
-    uint16_t * readings;
-    int numReadings;
+    TOFSensor * sensors;
+    int numSensors;
 
     uint16_t frontLeft;
     uint16_t frontMiddle;
@@ -29,19 +30,20 @@ public:
     uint16_t front;
     uint16_t sides;
 
-    Proximity();
+    Proximity(TOFSensor *sensors, int numSensors) : sensors(sensors), numSensors(numSensors) {}
+
 
     void analyze() {
-        /*
-        frontLeft = readings[FRONT_LEFT];
-        frontRight = readings[FRONT_RIGHT];
-        frontMiddle = readings[FRONT_MIDDLE];
-        left = readings[FRONT_LEFT];
-        right = readings[FRONT_RIGHT];
+
+        frontLeft = sensors[FRONT_LEFT].distance;
+        frontRight = sensors[FRONT_RIGHT].distance;
+        frontMiddle = sensors[FRONT_MIDDLE].distance;
+        left = sensors[LEFT].distance;
+        right = sensors[RIGHT].distance;
         front = frontLeft < frontRight ? frontLeft : frontRight;
         front = front < frontMiddle ? front : frontMiddle;
         sides = left < right ? left : right;
-         */
+
     }
 
     inline bool frontClear() {
