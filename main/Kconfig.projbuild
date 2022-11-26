@@ -29,10 +29,10 @@ menu "ESP Rover Config"
             default 25
         config TOF3_XSHUT
             int "tof3 xshut"
-            default 19
+            default 18
         config TOF4_XSHUT
             int "tof3 xshut"
-            default 18
+            default 19
 
     endmenu
 
