@@ -5,6 +5,8 @@
 #include <thread>
 #include "tof_array.hpp"
 
+uint16_t thresholds[5] = {400, 400, 400, 225, 225};
+
 TOFArray::TOFArray() {
     sensors = new TOFSensor[size]{
             TOFSensor(new VL53L0X(I2C_MASTER_NUM, 0x29, (gpio_num_t)CONFIG_TOF0_XSHUT), 90+12),
@@ -16,6 +18,7 @@ TOFArray::TOFArray() {
 }
 
 void TOFArray::init() {
+    proximity = ALL_CLEAR;
     initI2c();
     initXShuts();
     initAllSensors();
@@ -49,17 +52,19 @@ void TOFArray::initXShuts() {
     }
 }
 
-void TOFArray::initSensor(VL53L0X *sensor, uint8_t newAddr) {
-    sensor->address = VL53L0X_DEFAULT_ADDRESS;
-    sensor->init();
-    sensor->setAddress(newAddr);
+void TOFArray::initSensor(TOFSensor sensor, uint8_t newAddr) {
+    sensor.device->address = VL53L0X_DEFAULT_ADDRESS;
+    sensor.device->init();
+    sensor.device->setAddress(newAddr);
+    sensor.distance = 8191;
 }
 
 void TOFArray::initAllSensors() {
     uint8_t addr = 0x31;
     for(int i=0; i < size; i++) {
-        initSensor(sensors[i].device, addr++);
+        initSensor(sensors[i], addr++);
     }
+    encodeProximity();
 }
 
 void TOFArray::readAll() {
@@ -74,7 +79,6 @@ void TOFArray::readAllAvg() {
     for(int i=0; i < size; i++) {
         distances[i] = 0;
     }
-
     for(int i=0; i < 3; i++) {
         for(int j = 0; j < size; j++) {
             distances[j] = distances[j] + sensors[j].device->readRangeSingleMillimeters()/3;
@@ -97,4 +101,18 @@ void TOFArray::encodeProximity() {
         pos--;
     }
     proximity = p;
+}
+
+TOFArray::~TOFArray() {
+    deinit();
+}
+
+void TOFArray::deinit() {
+    i2c_driver_delete(I2C_MASTER_NUM);
+}
+
+void TOFArray::restart() {
+    deinit();
+    usleep(10000);
+    init();
 }

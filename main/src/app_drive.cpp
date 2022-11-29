@@ -5,6 +5,9 @@
 
 #include "app_drive.hpp"
 
+#define MOTOR_COUNT 4
+#define RADIANS 0.0174533
+
 static const char TAG[] = "AppDrive";
 
 static const float ROTATION_MATRIX[4] = {-1.0, 1.0, 1.0, -1.0};
@@ -15,8 +18,19 @@ static void log_drive_command(drive_command_t *c) {
 #endif
 }
 
+static float abs_max(float *values, int size) {
+    double max = 0;
+    for (int i = 0; i < size; i++) {
+        if (fabs(values[i]) > max) {
+            max = fabs(values[i]);
+        }
+    }
+    return max;
+}
 
-AppDrive::AppDrive(QueueHandle_t queueMotion) : queueMotion(queueMotion) {
+AppDrive::AppDrive(QueueHandle_t queueDrive) : xQueue_In(queueDrive) {
+
+    this->cmd = new drive_command_t {0,0,0};
 
     this->motors = new Servo[4]{
             Servo((gpio_num_t)CONFIG_M0_PWM, MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_GEN_A, MCPWM0A, SERVO_ORIENTATION_NORMAL, SERVO_MIN_US, SERVO_MAX_US, -360, 360),
@@ -36,6 +50,9 @@ void AppDrive::apply(drive_command_t cmd) {
     ESP_LOGI(TAG, "<Move heading: %2.f power: %2.f %% turn: %2.f %%>", cmd.heading, cmd.power * 100,
              cmd.turn * 100);
 #endif
+
+    this->cmd = new drive_command_t {cmd};
+
     float max_val;
     int i;
     float adj;
@@ -46,7 +63,6 @@ void AppDrive::apply(drive_command_t cmd) {
     float v2 = sin(radians - 0.25 * M_PI);// * cmd.power;
 
     float values[4] = {v1, v2, v1, v2};
-
 
     // level up factors so that max value of power factor based on heading is is 1
     max_val = abs_max(values, 4);
@@ -69,7 +85,7 @@ static void task(AppDrive *self) {
     drive_command_t cmd = {0, 0, 0};
 
     while (1) {
-        if (xQueueReceive(self->queueMotion, (void *) &cmd, 0) == pdTRUE) {
+        if (xQueueReceive(self->xQueue_In, (void *) &cmd, 0) == pdTRUE) {
             log_drive_command(&cmd);
             self->apply(cmd);
         }
@@ -78,8 +94,11 @@ static void task(AppDrive *self) {
     }
 }
 
-
 void AppDrive::run() {
 
     xTaskCreatePinnedToCore((TaskFunction_t)task, TAG, 5 * 1024, this, 4, NULL, 1);
+}
+
+drive_command_t AppDrive::getCmd() const {
+    return *cmd;
 }

@@ -14,32 +14,31 @@
 // for turning [-1,1]sin(angle+1/4π) * magnitude + turn
 
 #include <protocol_examples_common.h>
-#include "globals.h"
-#include "webserver.h"
+#include "app_httpd.hpp"
 #include "app_vision.hpp"
-#include "app_auto_drive.hpp"
-#include "app_drive.hpp"
+#include "robot.hpp"
 
+static const char * mqtt = "esp_rover_mqtt_user:eR.Wqsjfib5.XLV";
 static const int drive_queue_len = 5;
 static const int auto_mode_queue_len = 2;
 
 #define TASK_CORE 1
 
+static QueueHandle_t xQueueDriveFrame;
+static QueueHandle_t xQueueAutoDriveFrame;
 
 extern "C" void app_main(void) {
 
     xQueueDriveFrame = xQueueCreate(drive_queue_len, sizeof(drive_command_t));
     xQueueAutoDriveFrame = xQueueCreate(auto_mode_queue_len, sizeof(bool));
 
-    AppVision * vision = new AppVision();
-    AppDrive * appDrive = new AppDrive(xQueueDriveFrame);
-    AppAutoDrive * proximity = new AppAutoDrive(xQueueDriveFrame, xQueueAutoDriveFrame);
+    AppDrive * drive = new AppDrive(xQueueDriveFrame);
+    AppAutoDrive * autoDrive = new AppAutoDrive(xQueueDriveFrame, xQueueAutoDriveFrame);
+    Robot * robot = new Robot(drive, autoDrive);
 
-    vision->run();
-    appDrive->run();
-    proximity->run();
+    robot->run();
 
+    start_webserver(robot);
 
-    auto server = start_webserver();
 
 }

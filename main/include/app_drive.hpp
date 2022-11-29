@@ -11,7 +11,6 @@
 #include "freertos/freertos.h"
 #include "freertos/queue.h"
 #include "math.h"
-#include "globals.h"
 
 typedef struct {
     double power;
@@ -19,28 +18,20 @@ typedef struct {
     double turn;  // +/- percentage
 } drive_command_t;
 
-
-#define MOTOR_COUNT 4
-
 class AppDrive {
+private:
+    drive_command_t * cmd = nullptr;
 public:
     Servo * motors;
-    QueueHandle_t queueMotion;
+    QueueHandle_t xQueue_In;
 
-    AppDrive(const QueueHandle_t queueMotion = nullptr);
+    AppDrive(const QueueHandle_t queueDrive = nullptr);
 
     void run();
+
     void apply(drive_command_t cmd);
 
-    static float abs_max(float *values, int size) {
-        double max = 0;
-        for (int i = 0; i < size; i++) {
-            if (fabs(values[i]) > max) {
-                max = fabs(values[i]);
-            }
-        }
-        return max;
-    }
+    drive_command_t getCmd() const;
 
 };
 

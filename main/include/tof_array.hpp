@@ -15,6 +15,7 @@
 #define I2C_MASTER_RX_BUF_DISABLE   0                          /*!< I2C master doesn't need buffer */
 #define I2C_MASTER_TIMEOUT_MS       1000
 
+#define ALL_CLEAR 0b11111
 #define FL 0b10000
 #define FM 0b01000
 #define FR 0b00100
@@ -27,17 +28,19 @@ class TOFArray {
 public:
 
     static const int size = 5;
-    uint16_t thresholds[5] = {400, 400, 400, 250, 250};
 
     TOFSensor * sensors;
     uint8_t proximity = 0b00000;
 
     TOFArray();
+
+    virtual ~TOFArray();
+
     void initI2c();
 
     void initXShuts();
 
-    void initSensor(VL53L0X *sensor, uint8_t newAddr);
+    void initSensor(TOFSensor sensor, uint8_t newAddr);
 
     void initAllSensors();
 
@@ -46,6 +49,10 @@ public:
     void readAllAvg();
 
     void init();
+
+    void deinit();
+
+    void restart();
 
     void encodeProximity();
 

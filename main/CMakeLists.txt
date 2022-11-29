@@ -6,6 +6,8 @@ set(SOURCES
         src/app_auto_drive.cpp
         src/app_drive.cpp
         src/tof_array.cpp
+        src/app_httpd.cpp
+        src/robot.cpp
         )
 idf_component_register(SRCS ${SOURCES}
         INCLUDE_DIRS

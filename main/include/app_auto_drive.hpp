@@ -8,33 +8,37 @@
 #include <esp_log.h>
 #include "vl53l0x.hpp"
 #include "driver/i2c.h"
-#include "freertos/freertos.h"
+#include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "app_drive.hpp"
 #include "tof_sensor.hpp"
 #include "tof_array.hpp"
 
 class AppAutoDrive {
-public:
-
-    TOFArray * tofArray;
-
-
+private:
+    bool active = false;
     QueueHandle_t queueDrive;
-    QueueHandle_t queueAutoDrive;
-
-    bool isActive = false;
-
-    AppAutoDrive(QueueHandle_t queueMotion = nullptr, QueueHandle_t queueAutoDrive = nullptr);
-
-    void run();
 
     void stop();
+    void start();
+
+public:
+    QueueHandle_t xQueue_In;
+    TOFArray * tofArray;
+    explicit AppAutoDrive(QueueHandle_t queueMotion = nullptr, QueueHandle_t queueAutoDrive = nullptr);
+    void run();
+
+    bool isActive() {
+        return active;
+    }
 
     void sendCmd(drive_command_t cmd);
+
     drive_command_t getCmd();
 
     bool checkIsActive();
+
+
 
 
 };

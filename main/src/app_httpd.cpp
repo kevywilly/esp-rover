@@ -1,28 +1,19 @@
-#include <esp_wifi.h>
 #include <esp_event.h>
 #include <esp_log.h>
-#include <esp_system.h>
 #include <nvs_flash.h>
 #include <sys/param.h>
-#include "nvs_flash.h"
 #include "esp_netif.h"
 #include "esp_eth.h"
 #include "protocol_examples_common.h"
-#include "esp_tls_crypto.h"
 #include <esp_http_server.h>
-#include "esp_log.h"
-#include "esp_http_server.h"
-#include "esp_system.h"
-#include "esp_log.h"
-#include "esp_vfs.h"
-#include <fcntl.h>
 #include "cJSON.h"
 #include "docroot.h"
-#include <sys/param.h>
 #include "freertos/queue.h"
-#include "app_drive.hpp"
-
+#include <app_httpd.hpp>
 static const char *TAG = "ESP Web";
+
+static Robot * pRobot = NULL;
+
 
 static void disconnect_handler(void *arg, esp_event_base_t event_base,
                                int32_t event_id, void *event_data);
@@ -31,20 +22,31 @@ static void connect_handler(void *arg, esp_event_base_t event_base,
                             int32_t event_id, void *event_data);
 
 
+static void sendAutoDriveToggleCmmand() {
+    uint8_t msg = 1;
+    xQueueSend(pRobot->appAutoDrive->xQueue_In, &msg, 10);
+}
+
+static void sendDriveCmd(float power, float heading, float turn) {
+    drive_command_t cmd = {power, heading, turn};
+    xQueueSend(pRobot->appDrive->xQueue_In, &cmd, 10);
+}
+
 static esp_err_t process_move_request(cJSON *root) {
     double heading = cJSON_GetObjectItem(root, CONFIG_HEADING_PARAM_NAME)->valuedouble;
     double power = cJSON_GetObjectItem(root, CONFIG_POWER_PARAM_NAME)->valuedouble;
     double turn = cJSON_GetObjectItem(root, CONFIG_TURN_PARAM_NAME)->valuedouble;
-    drive_command_t cmd = {.power = power, .heading = heading, .turn = turn};
-    xQueueSend(xQueueDriveFrame, &cmd, 10);
+    if(pRobot->appAutoDrive->isActive()) {
+        uint8_t adf = 1;
+        xQueueSend(pRobot->appAutoDrive->xQueue_In, &adf, 10);
+    }
+    sendDriveCmd(power, heading, turn);
     return ESP_OK;
 }
 
 static esp_err_t process_auto_mode() {
-    uint8_t cmd = 1;
-    drive_command_t dt = {.power = 0, .heading = 0, .turn = 0};
-    xQueueSend(xQueueAutoDriveFrame, &cmd, 10);
-    xQueueSend(xQueueDriveFrame, &dt, 10);
+    sendDriveCmd(0,0,0);
+    sendAutoDriveToggleCmmand();
     return ESP_OK;
 }
 
@@ -64,6 +66,35 @@ static esp_err_t home_get_handler(httpd_req_t *req) {
     httpd_resp_set_type(req, "text/html");
     httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
     httpd_resp_send(req, (const char *) DOCROOT, DOCROOT_LEN);
+    return ESP_OK;
+}
+
+static esp_err_t state_get_handler(httpd_req_t *req) {
+    httpd_resp_set_type(req, HTTPD_TYPE_JSON);
+    drive_command_t cmd = pRobot->appDrive->getCmd();
+
+    cJSON *root = cJSON_CreateObject();
+    cJSON *readings = NULL;
+
+    cJSON_AddNumberToObject(root, "proximity", pRobot->appAutoDrive->tofArray->proximity);
+    cJSON_AddBoolToObject(root, "autodrive", pRobot->appAutoDrive->isActive());
+    cJSON *driveCmd = cJSON_AddObjectToObject(root, "drive_command");
+
+    cJSON_AddNumberToObject(driveCmd, "power", cmd.power);
+    cJSON_AddNumberToObject(driveCmd, "heading", cmd.heading);
+    cJSON_AddNumberToObject(driveCmd, "turn", cmd.turn);
+
+    readings = cJSON_AddArrayToObject(root, "readings");
+    for(int i=0; i < pRobot->appAutoDrive->tofArray->size; i++) {
+        cJSON * reading = cJSON_CreateObject();
+        cJSON_AddNumberToObject(reading, "angle", pRobot->appAutoDrive->tofArray->sensors[i].angle);
+        cJSON_AddNumberToObject(reading, "distances", pRobot->appAutoDrive->tofArray->sensors[i].distance);
+        cJSON_AddItemToArray(readings, reading);
+    }
+    const char *resp = cJSON_Print(root);
+    httpd_resp_sendstr(req, resp);
+    free((void *) resp);
+    cJSON_Delete(root);
     return ESP_OK;
 }
 
@@ -109,7 +140,10 @@ static esp_err_t api_post_handler(httpd_req_t *req) {
     return ESP_OK;
 }
 
-static httpd_handle_t start_webserver() {
+httpd_handle_t start_webserver(Robot* robot) {
+
+    pRobot = robot;
+
     httpd_handle_t server = NULL;
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.lru_purge_enable = true;
@@ -129,6 +163,13 @@ static httpd_handle_t start_webserver() {
             .user_ctx  = NULL
     };
 
+    httpd_uri_t api_get_state_uri = {
+            .uri       = "/api/state",
+            .method    = HTTP_GET,
+            .handler   = state_get_handler,
+            .user_ctx  = NULL
+    };
+
     httpd_uri_t api_post_uri = {
             .uri       = "/api",
             .method    = HTTP_POST,
@@ -137,14 +178,15 @@ static httpd_handle_t start_webserver() {
     };
 
 
-    // Start the httpd server
+    // Start the httpd server-**-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     ESP_LOGI(TAG, "Starting server on port: '%d'", config.server_port);
     if (httpd_start(&server, &config) == ESP_OK) {
         // Set URI handlers
         ESP_LOGI(TAG, "Registering URI handlers");
         httpd_register_uri_handler(server, &home_get_uri);
         httpd_register_uri_handler(server, &api_post_uri);
-        return server;
+        httpd_register_uri_handler(server, &api_get_state_uri);
+        return ESP_OK;
     }
 
     ESP_LOGI(TAG, "Error starting server!");
@@ -171,6 +213,6 @@ static void connect_handler(void *arg, esp_event_base_t event_base,
     httpd_handle_t *server = (httpd_handle_t *) arg;
     if (*server == NULL) {
         ESP_LOGI(TAG, "Starting webserver");
-        *server = start_webserver();
+        *server = start_webserver(pRobot);
     }
 }
