@@ -33,10 +33,10 @@ AppDrive::AppDrive(QueueHandle_t queueDrive) : xQueue_In(queueDrive) {
     this->cmd = new drive_command_t {0,0,0};
 
     this->motors = new Servo[4]{
-            Servo((gpio_num_t)CONFIG_M0_PWM, MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_GEN_A, MCPWM0A, SERVO_ORIENTATION_NORMAL, SERVO_MIN_US, SERVO_MAX_US, -360, 360),
-            Servo((gpio_num_t)CONFIG_M1_PWM, MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_GEN_B, MCPWM0B, SERVO_ORIENTATION_REVERSE, SERVO_MIN_US, SERVO_MAX_US, -360, 360),
-            Servo((gpio_num_t)CONFIG_M2_PWM, MCPWM_UNIT_0, MCPWM_TIMER_1, MCPWM_GEN_A, MCPWM1A, SERVO_ORIENTATION_REVERSE, SERVO_MIN_US, SERVO_MAX_US, -360, 360),
-            Servo((gpio_num_t)CONFIG_M3_PWM, MCPWM_UNIT_0, MCPWM_TIMER_1, MCPWM_GEN_B, MCPWM1B, SERVO_ORIENTATION_NORMAL, SERVO_MIN_US, SERVO_MAX_US, -360, 360)
+            Servo((gpio_num_t)CONFIG_M0_PWM, MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_GEN_A, MCPWM0A, SERVO_ORIENTATION_NORMAL, SERVO_MIN_US-50, SERVO_MAX_US-50, -360, 360),
+            Servo((gpio_num_t)CONFIG_M1_PWM, MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_GEN_B, MCPWM0B, SERVO_ORIENTATION_REVERSE, SERVO_MIN_US-50, SERVO_MAX_US-50, -360, 360),
+            Servo((gpio_num_t)CONFIG_M2_PWM, MCPWM_UNIT_0, MCPWM_TIMER_1, MCPWM_GEN_A, MCPWM1A, SERVO_ORIENTATION_REVERSE, SERVO_MIN_US-50, SERVO_MAX_US-50, -360, 360),
+            Servo((gpio_num_t)CONFIG_M3_PWM, MCPWM_UNIT_0, MCPWM_TIMER_1, MCPWM_GEN_B, MCPWM1B, SERVO_ORIENTATION_NORMAL, SERVO_MIN_US-50, SERVO_MAX_US-50, -360, 360)
     };
 
     for(int i=0; i < MOTOR_COUNT; i++) {
@@ -45,7 +45,7 @@ AppDrive::AppDrive(QueueHandle_t queueDrive) : xQueue_In(queueDrive) {
 }
 
 
-void AppDrive::apply(drive_command_t cmd) {
+void AppDrive::apply_command(drive_command_t cmd) {
 #ifdef CONFIG_ESP_ROVER_DEBUG
     ESP_LOGI(TAG, "<Move heading: %2.f power: %2.f %% turn: %2.f %%>", cmd.heading, cmd.power * 100,
              cmd.turn * 100);
@@ -77,7 +77,7 @@ void AppDrive::apply(drive_command_t cmd) {
     adj = max_val > 1.0 ? 1.0 / max_val : 1.0;
 
     for (i = 0; i < 4; i++) {
-        motors[i].spin(values[i] * adj);
+        motors[i].setPower(values[i] * adj);
     }
 }
 
@@ -87,7 +87,7 @@ static void task(AppDrive *self) {
     while (1) {
         if (xQueueReceive(self->xQueue_In, (void *) &cmd, 0) == pdTRUE) {
             log_drive_command(&cmd);
-            self->apply(cmd);
+            self->apply_command(cmd);
         }
 
         vTaskDelay(10);
@@ -96,7 +96,7 @@ static void task(AppDrive *self) {
 
 void AppDrive::run() {
 
-    xTaskCreatePinnedToCore((TaskFunction_t)task, TAG, 5 * 1024, this, 4, NULL, 1);
+    xTaskCreatePinnedToCore((TaskFunction_t)task, TAG, 4 * 1024, this, 5, NULL, 1);
 }
 
 drive_command_t AppDrive::getCmd() const {

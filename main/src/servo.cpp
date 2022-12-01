@@ -12,10 +12,6 @@ Servo::Servo(const gpio_num_t &pwmPin, mcpwm_unit_t unit, mcpwm_timer_t timer, m
                                                                                                                                                _maxMicros(maxUs),
                                                                                                                                                _minAngle(minAngle),
                                                                                                                                                _maxAngle(maxAngle){
-    _zero = 0.5*(_maxMicros + _minMicros);
-    _dutyFactor = (0.5) * (_maxMicros - _minMicros);
-    _angleFactor = (_maxMicros - _minMicros) / (_maxAngle - _minAngle);
-
 }
 
 Servo::~Servo() {
@@ -37,21 +33,36 @@ void Servo::deInit() {
     setDuty(0);
 }
 
+// Note - duty is in the form 50.0 for 50%
 void Servo::setDuty(float duty) {
     mcpwm_set_duty(unit,timer,generator,duty);
     mcpwm_set_duty_type(unit,timer,generator,MCPWM_DUTY_MODE_0);
 }
 
-void Servo::spin(float power) {
-    power = (power < -1 ? -1 : power > 1 ? 1 : power) * orientation;
-    float duty = power == 0 ? 0.0 : (_zero + power * _dutyFactor) / 200.0;  // (100/20000)
-    setDuty(duty);
-}
-
 int16_t Servo::setAngle(int16_t angle) {
-    angle = angle < _minAngle ? _minAngle : (angle > _maxAngle ? _maxAngle : angle);
-    float duty = _minMicros + (angle + 90) * (_maxMicros - _minMicros) / (_maxAngle - _minAngle);
-    setDuty(duty);
+    angle = (angle < _minAngle ? _minAngle : (angle > _maxAngle ? _maxAngle : angle)) * orientation;
+    setMicroseconds(_minMicros + ((angle - _minAngle)*(_maxMicros-_minMicros))/(_maxAngle - _minAngle));
     return angle;
 }
 
+float Servo::setPower(float power) {
+    if(power == 0) {
+        setDuty(0);
+        return power;
+    }
+    power = (power < -1 ? -1 : power > 1 ? 1 : power) * orientation;
+    setMicroseconds(power * 0.5 * (_maxMicros - _minMicros) + (_minMicros+_maxMicros/2));
+    return power;
+}
+
+/*
+ * power = (power < -1 ? -1 : power > 1 ? 1 : power) * orientation;
+    float duty = power == 0 ? 0.0 : (_zero + power * _dutyFactor) / 200.0;  // (100/20000)
+    setDuty(duty);
+
+
+
+    _zero = 0.5*(_maxMicros + _minMicros);
+    _dutyFactor = (0.5) * (_maxMicros - _minMicros);
+    _angleFactor = (_maxMicros - _minMicros) / (_maxAngle - _minAngle);
+ */

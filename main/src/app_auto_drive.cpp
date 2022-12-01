@@ -91,11 +91,11 @@ static void task(AppAutoDrive *self) {
         if(self->isActive()) {
             self->sendCmd(cmd);
         }
-        vTaskDelay(pdMS_TO_TICKS(100));
+        vTaskDelay(pdMS_TO_TICKS(60));
     }
 }
 
 void AppAutoDrive::run() {
-    xTaskCreatePinnedToCore((TaskFunction_t)task, TAG, 5 * 1024, this, 5, NULL, 1);
+    xTaskCreatePinnedToCore((TaskFunction_t)task, TAG, 4 * 1024, this, 5, NULL, 1);
 }
 

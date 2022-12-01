@@ -15,30 +15,34 @@
 
 #include <protocol_examples_common.h>
 #include "app_httpd.hpp"
-#include "app_vision.hpp"
+#include "app_look.hpp"
 #include "robot.hpp"
+#include "driver/gpio.h"
 
+static const char * TAG = "ESPRover";
 static const char * mqtt = "esp_rover_mqtt_user:eR.Wqsjfib5.XLV";
-static const int drive_queue_len = 5;
-static const int auto_mode_queue_len = 2;
-
+static const int drive_queue_len = 10;
+static const int auto_drive_queue_len = 2;
+static const int neck_queue_len = 10;
 #define TASK_CORE 1
 
 static QueueHandle_t xQueueDriveFrame;
 static QueueHandle_t xQueueAutoDriveFrame;
+static QueueHandle_t xQueueLookFrame;
 
 extern "C" void app_main(void) {
 
     xQueueDriveFrame = xQueueCreate(drive_queue_len, sizeof(drive_command_t));
-    xQueueAutoDriveFrame = xQueueCreate(auto_mode_queue_len, sizeof(bool));
+    xQueueAutoDriveFrame = xQueueCreate(auto_drive_queue_len, sizeof(bool));
+    xQueueLookFrame = xQueueCreate(neck_queue_len, sizeof(look_cmd_t));
 
+    AppLook * appLook = new AppLook(xQueueLookFrame);
     AppDrive * drive = new AppDrive(xQueueDriveFrame);
     AppAutoDrive * autoDrive = new AppAutoDrive(xQueueDriveFrame, xQueueAutoDriveFrame);
-    Robot * robot = new Robot(drive, autoDrive);
+    Robot * robot = new Robot(drive, autoDrive, appLook);
 
     robot->run();
 
     start_webserver(robot);
-
 
 }

@@ -4,7 +4,7 @@
 
 #include "robot.hpp"
 
-Robot::Robot(AppDrive *pAppDrive, AppAutoDrive *pAppAutoDrive) : appDrive(pAppDrive), appAutoDrive(pAppAutoDrive) {
+Robot::Robot(AppDrive *pAppDrive, AppAutoDrive *pAppAutoDrive, AppLook * pAppLook) : appDrive(pAppDrive), appAutoDrive(pAppAutoDrive), appLook(pAppLook) {
     tofArray = new TOFArray();
     tofArray->init();
     pAppAutoDrive->tofArray = tofArray;
@@ -12,5 +12,6 @@ Robot::Robot(AppDrive *pAppDrive, AppAutoDrive *pAppAutoDrive) : appDrive(pAppDr
 
 void Robot::run() {
     appDrive->run();
+    //appLook->run();
     appAutoDrive->run();
 }

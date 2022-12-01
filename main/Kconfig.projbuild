@@ -33,7 +33,6 @@ menu "ESP Rover Config"
         config TOF4_XSHUT
             int "tof3 xshut"
             default 19
-
     endmenu
 
     menu "ESP Rover PWM Config"
@@ -49,6 +48,12 @@ menu "ESP Rover Config"
         config M3_PWM
                 int "Motor 3 PWM Pin"
                 default 33
+        config NECK_PITCH_PWM
+                        int "Neck Pitch PWM"
+                        default 16
+        config NECK_YAW_PWM
+                        int "Neck Pitch PWM"
+                        default 17
     endmenu
 
     menu "ESP Rover Commands and Parameters"

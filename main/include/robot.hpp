@@ -7,13 +7,15 @@
 
 #include <app_drive.hpp>
 #include <app_auto_drive.hpp>
+#include "app_look.hpp"
 
 class Robot {
 
 public:
-    Robot(AppDrive *pAppDrive, AppAutoDrive *pAppAutoDrive);
+    Robot(AppDrive *pAppDrive, AppAutoDrive *pAppAutoDrive, AppLook *pAppLook);
     AppDrive * appDrive;
     AppAutoDrive * appAutoDrive;
+    AppLook * appLook;
     TOFArray * tofArray;
     void run();
 

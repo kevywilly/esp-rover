@@ -29,7 +29,7 @@ public:
 
     void run();
 
-    void apply(drive_command_t cmd);
+    void apply_command(drive_command_t cmd);
 
     drive_command_t getCmd() const;
 
