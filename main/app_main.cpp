@@ -14,35 +14,50 @@
 // for turning [-1,1]sin(angle+1/4π) * magnitude + turn
 
 #include <protocol_examples_common.h>
-#include "app_httpd.hpp"
-#include "app_look.hpp"
-#include "robot.hpp"
-#include "driver/gpio.h"
+#include "app_httpd.h"
+#include "app_look.h"
+#include "app_proximity.h"
+#include "robot.h"
+#include "espserial.h"
+#include "proximity.h"
 
 static const char * TAG = "ESPRover";
-static const char * mqtt = "esp_rover_mqtt_user:eR.Wqsjfib5.XLV";
+//static const char * mqtt = "esp_rover_mqtt_user:eR.Wqsjfib5.XLV";
 static const int drive_queue_len = 10;
 static const int auto_drive_queue_len = 2;
 static const int neck_queue_len = 10;
-#define TASK_CORE 1
+static const int proximity_queue_len = 2;
 
 static QueueHandle_t xQueueDriveFrame;
 static QueueHandle_t xQueueAutoDriveFrame;
 static QueueHandle_t xQueueLookFrame;
+static QueueHandle_t xQueueProximityFrame;
 
 extern "C" void app_main(void) {
+
 
     xQueueDriveFrame = xQueueCreate(drive_queue_len, sizeof(drive_command_t));
     xQueueAutoDriveFrame = xQueueCreate(auto_drive_queue_len, sizeof(bool));
     xQueueLookFrame = xQueueCreate(neck_queue_len, sizeof(look_cmd_t));
+    xQueueProximityFrame = xQueueCreate(proximity_queue_len, sizeof(uint8_t));
 
-    AppLook * appLook = new AppLook(xQueueLookFrame);
+    ProximityFrameHandle_t pFrame = new ProximityFrame(230, 275, 70, 70);
+    AppProximity * appProximity = nullptr; //new AppProximity(xQueueProximityFrame, pFrame);
+    AppLook * appLook = nullptr;
     AppDrive * drive = new AppDrive(xQueueDriveFrame);
-    AppAutoDrive * autoDrive = new AppAutoDrive(xQueueDriveFrame, xQueueAutoDriveFrame);
-    Robot * robot = new Robot(drive, autoDrive, appLook);
 
-    robot->run();
+
+
+    AppAutoDrive * autoDrive = new AppAutoDrive(xQueueAutoDriveFrame, xQueueDriveFrame, pFrame);
+
+    Robot * robot = new Robot(drive, autoDrive, appLook, appProximity);
+
+    //robot->appProximity->run();
+    robot->appDrive->run();
+    robot->appAutoDrive->run();
+    //robot->appLook->run();
 
     start_webserver(robot);
+
 
 }

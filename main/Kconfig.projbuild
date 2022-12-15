@@ -15,9 +15,23 @@ menu "ESP Rover Config"
 
     config ESP_ROVER_MAX_POWER
         int "max power pct"
-        default 80
+        default 100
 
-    menu "ESP Rover TOF CONFIG"
+    menu "Autodrive Thresholds"
+        config AUTODRIVE_FRONT_CENTER_THRESHOLD
+            int "front center"
+            default 420
+        config AUTODRIVE_FRONT_LATERAL1_THRESHOLD
+            int "front lateral 1"
+            default 420
+        config AUTODRIVE_FRONT_LATERAL2_THRESHOLD
+            int "front lateral 2"
+            default 420
+        config AUTODRIVE_SIDE_CENTER_THRESHOLD
+            int "side center"
+            default 250
+    endmenu
+    menu "TOF Sensor Config"
         config TOF0_XSHUT
              int "tof0 xshut"
              default 14
@@ -35,7 +49,7 @@ menu "ESP Rover Config"
             default 19
     endmenu
 
-    menu "ESP Rover PWM Config"
+    menu "PWM Config"
         config M0_PWM
                int "Motor 0 PWM pin"
                default 23
@@ -44,7 +58,7 @@ menu "ESP Rover Config"
                 default 27
         config M2_PWM
                 int "Motor 2 PWM Pin"
-                default 4
+                default 22
         config M3_PWM
                 int "Motor 3 PWM Pin"
                 default 33
@@ -56,7 +70,7 @@ menu "ESP Rover Config"
                         default 17
     endmenu
 
-    menu "ESP Rover Commands and Parameters"
+    menu "API Commands and Params"
         config AUTO_DRIVE_COMMAND
             string "auto"
             default "auto"
@@ -97,8 +111,3 @@ menu "ESP Rover Config"
             default "turn"
     endmenu
 endmenu
-# IN1_PINS   {GPIO_NUM_14, GPIO_NUM_16, GPIO_NUM_21,  GPIO_NUM_0}
-# IN2_PINS   {GPIO_NUM_12, GPIO_NUM_25, GPIO_NUM_22, GPIO_NUM_15}
-# PWM_PINS   {GPIO_NUM_27, GPIO_NUM_33, GPIO_NUM_23,  GPIO_NUM_4}
-
-# RPM_FACTORS {1.0, 0.87, 0.84, 0.81}

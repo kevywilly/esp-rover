@@ -1,0 +1,29 @@
+menu "RP Lidar Config"
+
+    config RP_LIDAR_DEBUG
+        bool "Low Level Debug"
+        default n
+        help
+            Low Level Debug
+
+    config RPLIDAR_MOTOR_GPIO
+        int "MOTOR PIN"
+        default 6
+
+    config RPLIDAR_UART_BAUDRATE
+        int "UART BAUDRATE"
+        default 115200
+
+    config RPLIDAR_UART_PORT_NUM
+        int "UART PORT NUM"
+        default 2
+
+    config RPLIDAR_UART_TX_PIN
+        int "TX IO PIN"
+        default 4
+
+    config RPLIDAR_UART_RX_PIN
+        int "RX IO PIN"
+        default 5
+
+endmenu
