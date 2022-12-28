@@ -36,6 +36,32 @@ bool AppAutoDrive::checkIsActive() {
     return active;
 }
 
+drive_command_t AppAutoDrive::getCmd2() {
+    auto frame = *pFrame;
+    if(frame.isClear()) {
+        return {.power = 0.8, .heading = 90, .turn = 0};
+    }
+    if(frame.qIsClear(QFRONT)) {
+        if(frame.qIsClear(QLEFT) && frame.qIsClear(QRIGHT)) {
+            return {.power = 0.5, .heading = 90, .turn = 0};
+        } else if(frame.qIsClear(QLEFT)) {
+            return {.power = 0.3, .heading = 180, .turn = 0};
+        } else if(frame.qIsClear(QRIGHT)) {
+            return {.power = 0.3, .heading = 0, .turn = 0};
+        } else {
+            return {.power = 0.3, .heading = 90, .turn = 0};
+        }
+    } else {
+        auto q0 = pFrame->status_t().q0;
+        if(pLeft(q0)) {
+            // spin left
+            return {.power = 0, .heading = 90, .turn = 0.3};
+        } else  {
+            // spin right
+            return {.power = 0, .heading = 90, .turn = -0.3};
+        }
+    }
+}
 drive_command_t AppAutoDrive::getCmd() {
 
     if(tofArray->isClear(FRONT)) {
@@ -75,14 +101,14 @@ static void task(AppAutoDrive *self) {
 
         proximity_reading_t readings[5];
         for(int i=0; i < 5; i++) {
-            readings[i] = {.angle = (float)tofArray->sensors[i].angle, .distance = tofArray->sensors[i].distance, .quality=255};
+            readings[i] = {.angle = (float)tofArray->sensors[i].angle, .distance = tofArray->sensors[i].distance, .offset = tofArray->sensors[i].offset, .quality=255};
         }
         self->pFrame->applyReadings(readings,5);
         ESP_LOGI(TAG, "PROX_status: %d", self->pFrame->status());
         proximity_status_t tstat = self->pFrame->status_t();
         printf("%d, %d, %d, %d", tstat.q0, tstat.q1, tstat.q2, tstat.q3);
 
-        drive_command_t cmd = self->getCmd();
+        drive_command_t cmd = self->getCmd2();
         //ESP_LOGI(TAG, "\nProximity: 0b%d%d%d%d%d", bit(n,4), bit(n,3), bit(n,2), bit(n,1), bit(n,0));
 #ifdef CONFIG_ESP_ROVER_DEBUG
         ESP_LOGI(TAG, "\n");

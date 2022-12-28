@@ -34,6 +34,7 @@ public:
     void sendCmd(drive_command_t cmd);
 
     drive_command_t getCmd();
+    drive_command_t getCmd2();
 
     bool checkIsActive();
 

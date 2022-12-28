@@ -72,7 +72,7 @@ static esp_err_t home_get_handler(httpd_req_t *req) {
 static esp_err_t state_get_handler(httpd_req_t *req) {
     httpd_resp_set_type(req, HTTPD_TYPE_JSON);
     drive_command_t cmd = pRobot->appDrive->getCmd();
-    look_cmd_t lcmd = pRobot->appLook->getCmd();
+
     cJSON *root = cJSON_CreateObject();
     cJSON *readings = NULL;
 
@@ -83,10 +83,6 @@ static esp_err_t state_get_handler(httpd_req_t *req) {
     cJSON_AddNumberToObject(driveCmd, "power", cmd.power);
     cJSON_AddNumberToObject(driveCmd, "heading", cmd.heading);
     cJSON_AddNumberToObject(driveCmd, "turn", cmd.turn);
-
-    cJSON *lookCmd = cJSON_AddObjectToObject(root, "look_command");
-    cJSON_AddNumberToObject(lookCmd, "yaw", lcmd.yaw);
-    cJSON_AddNumberToObject(lookCmd, "pitch", lcmd.pitch);
 
     readings = cJSON_AddArrayToObject(root, "readings");
     for(int i=0; i < pRobot->appAutoDrive->tofArray->size; i++) {

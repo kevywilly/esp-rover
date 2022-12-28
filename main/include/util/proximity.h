@@ -45,15 +45,24 @@
 
 #define sliceOf(a1, a2) ((slice_t){a360(a1), a360(a2)})
 
-#define SLICE_A_CLEAR 0b100
-#define SLICE_B_CLEAR 0b010
-#define SLICE_C_CLEAR 0b001
-#define QUADRANT_CLEAR 0b111
-
 #define PROXIMITY_CLEAR 0b111111111111
 
+#define QFRONT 0
+#define QRIGHT 1
+#define QREAR 2
+#define QLEFT 3
 
-
+static bool pLeft(uint16_t v) {
+    return (v & 0b001) == 0b001;
+}
+static bool pRight(uint16_t v) {
+    return (v & 0b100) == 0b100;
+}
+/*
+static bool pCenter(uint16_t v) {
+    return (v & 0b010) == 0b010;
+}
+*/
 enum ReadState{WAITING_FOR_0, WAITING_FOR_359, WAITING_TO_APPLY_READINGS};
 // each bit in 12 bit struct proximity_state_t represents 1 of 12 slices
 
@@ -68,6 +77,7 @@ typedef struct _proximity_status_t {
 typedef struct _proximity_reading_t {
     float angle;
     uint32_t distance;
+    uint32_t offset;
     uint8_t quality;
 } proximity_reading_t;
 
@@ -113,13 +123,42 @@ public:
             ProximityFrame(xLen, yLen, xOffset, yOffset, xLen, yLen / 2) {}
 
     proximity_status_t status_t() {
-        proximity_status_t *t = (proximity_status_t*) &_status;
+        return _status_t;
+    }
 
-        return *t;
+    inline bool isClear() {
+        return (_status & PROXIMITY_CLEAR) == PROXIMITY_CLEAR;
+    }
+    inline bool qIsClear(int index) {
+        return (qStatus(index) & 0b111) == 0b111;
+    }
+
+
+    uint16_t qStatus(int index) {
+        switch(index) {
+            case 0:
+                return _status_t.q0;
+            case 1:
+                return _status_t.q1;
+            case 2:
+                return _status_t.q2;
+            default:
+                return _status_t.q3;
+        }
+    }
+
+    int8_t qPrefer(int index) {
+        auto s = qStatus(index);
+        if(pLeft(s))
+            return -1;
+        if(pRight(s))
+            return 1;
+        return 0;
     }
     uint16_t status()  {
         return _status;
     }
+
     uint16_t status_in_progress()  {
         return _status;
     }
@@ -150,20 +189,21 @@ public:
         _status_in_progress = PROXIMITY_CLEAR;
         for(int i=0; i < len; i++) {
             float angle = readings[i].angle;
-            uint32_t distance = readings[i].distance;
+            uint32_t distance = readings[i].distance + readings[i].offset;
             proximity_threshold_t threshold = thresholdForAngle(angle);
             if (distance < threshold.distance) {
                 _status_in_progress &= ~(1 << threshold.slice_id);
             }
         }
-        _status = _status_in_progress;
+        _set_status(_status_in_progress);
     }
 
     void applyReading(proximity_reading_t reading) {
         if(reading.distance == 0) return;
 
         float angle = reading.angle;
-        uint32_t distance = reading.distance;
+        uint32_t distance = reading.distance+reading.offset;
+
 
         if(angleIsZero(angle)) _status_in_progress = PROXIMITY_CLEAR;
 
@@ -173,12 +213,13 @@ public:
             _status_in_progress &= ~(1 << threshold.slice_id);
         }
 
-        if(angleIs359(angle)) _status = _status_in_progress;
+        if(angleIs359(angle)) _set_status(_status_in_progress);
     }
 
 private:
     uint16_t _status;
     uint16_t _status_in_progress;
+    proximity_status_t _status_t;
 
     ReadState _read_state;
 
@@ -195,6 +236,11 @@ private:
     float _thetaX;  // angle width of the front and rear edges of the frame
     float _thetaY;  // angle width of the left and right edges of the frame
 
+    void _set_status(uint16_t value) {
+        _status = value;
+        proximity_status_t *t = (proximity_status_t*) &_status;
+        _status_t = *t;
+    }
     void _reset_status(uint16_t &status) {
         status = PROXIMITY_CLEAR;
     }

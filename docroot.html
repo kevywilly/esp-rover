@@ -122,13 +122,19 @@
             padding: 1vh;
             text-align: center
         }
+
+        .video {
+            width: 320px;
+            height: 240px;
+        }
     </style>
 </head>
 <body>
 <h1>ESP Rover</h1>
 <div>
     <div class="video-container">
-        <embed type="multipart/x-mixed-replace" src="http://espcamera.lan:81/stream" width="320" height="240">
+        <embed class="video" type="multipart/x-mixed-replace" src="http://espcamera.lan:81/stream" >
+
         <div class="results" id="results"></div>
         <div class="auto-container">
             <button class="auto-btn" onclick="toggle_auto();">Toggle Auto Drive</button>
