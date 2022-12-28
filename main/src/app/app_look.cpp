@@ -6,14 +6,16 @@
 #include <thread>
 #include "app_look.h"
 
-static const char * TAG = "AppLook";
+static const char *TAG = "AppLook";
 
-AppLook::AppLook(QueueHandle_t queue_in): xQueue_In(queue_in) {
-    _yawServo = new Servo((gpio_num_t) CONFIG_NECK_YAW_PWM, MCPWM_UNIT_1, MCPWM_TIMER_0, MCPWM_GEN_A, MCPWM0A, SERVO_ORIENTATION_NORMAL, SERVO_MIN_US, SERVO_MAX_US, -90, 90);
-    _pitchServo = new Servo((gpio_num_t) CONFIG_NECK_PITCH_PWM, MCPWM_UNIT_1, MCPWM_TIMER_0, MCPWM_GEN_B, MCPWM0B, SERVO_ORIENTATION_REVERSE, SERVO_MIN_US, SERVO_MAX_US, -90, 90);
+AppLook::AppLook(QueueHandle_t queue_in) : xQueue_In(queue_in) {
+    _yawServo = new Servo((gpio_num_t) CONFIG_NECK_YAW_PWM, MCPWM_UNIT_1, MCPWM_TIMER_0, MCPWM_GEN_A, MCPWM0A,
+                          SERVO_ORIENTATION_NORMAL, SERVO_MIN_US, SERVO_MAX_US, -90, 90);
+    _pitchServo = new Servo((gpio_num_t) CONFIG_NECK_PITCH_PWM, MCPWM_UNIT_1, MCPWM_TIMER_0, MCPWM_GEN_B, MCPWM0B,
+                            SERVO_ORIENTATION_REVERSE, SERVO_MIN_US, SERVO_MAX_US, -90, 90);
     _pitchServo->init();
     _yawServo->init();
-    apply(look_cmd_t {5,-5});
+    apply(look_cmd_t{5, -5});
 }
 
 void AppLook::setYaw(float val) {
@@ -69,6 +71,6 @@ static void task(AppLook *self) {
 
 void AppLook::run() {
 
-    xTaskCreatePinnedToCore((TaskFunction_t)task, TAG, 2 * 1024, this, 5, NULL, 1);
+    xTaskCreatePinnedToCore((TaskFunction_t) task, TAG, 2 * 1024, this, 5, NULL, 1);
 
 }

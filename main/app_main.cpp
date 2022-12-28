@@ -22,7 +22,6 @@
 //static const char * mqtt = "esp_rover_mqtt_user:eR.Wqsjfib5.XLV";
 static const int drive_queue_len = 10;
 static const int auto_drive_queue_len = 2;
-static const int proximity_queue_len = 2;
 
 static QueueHandle_t xQueueDriveFrame;
 static QueueHandle_t xQueueAutoDriveFrame;

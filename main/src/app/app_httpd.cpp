@@ -10,9 +10,10 @@
 #include "docroot.h"
 #include "freertos/queue.h"
 #include <app_httpd.h>
+
 static const char *TAG = "ESP Web";
 
-static Robot * pRobot = NULL;
+static Robot *pRobot = NULL;
 
 
 static void disconnect_handler(void *arg, esp_event_base_t event_base,
@@ -36,7 +37,7 @@ static esp_err_t process_move_request(cJSON *root) {
     double heading = cJSON_GetObjectItem(root, CONFIG_HEADING_PARAM_NAME)->valuedouble;
     double power = cJSON_GetObjectItem(root, CONFIG_POWER_PARAM_NAME)->valuedouble;
     double turn = cJSON_GetObjectItem(root, CONFIG_TURN_PARAM_NAME)->valuedouble;
-    if(pRobot->appAutoDrive->isActive()) {
+    if (pRobot->appAutoDrive->isActive()) {
         uint8_t adf = 1;
         xQueueSend(pRobot->appAutoDrive->xQueue_In, &adf, 10);
     }
@@ -45,7 +46,7 @@ static esp_err_t process_move_request(cJSON *root) {
 }
 
 static esp_err_t process_auto_mode() {
-    sendDriveCmd(0,0,0);
+    sendDriveCmd(0, 0, 0);
     sendAutoDriveToggleCmmand();
     return ESP_OK;
 }
@@ -85,8 +86,8 @@ static esp_err_t state_get_handler(httpd_req_t *req) {
     cJSON_AddNumberToObject(driveCmd, "turn", cmd.turn);
 
     readings = cJSON_AddArrayToObject(root, "readings");
-    for(int i=0; i < pRobot->appAutoDrive->tofArray->size; i++) {
-        cJSON * reading = cJSON_CreateObject();
+    for (int i = 0; i < pRobot->appAutoDrive->tofArray->size; i++) {
+        cJSON *reading = cJSON_CreateObject();
         cJSON_AddNumberToObject(reading, "angle", pRobot->appAutoDrive->tofArray->sensors[i].angle);
         cJSON_AddNumberToObject(reading, "distances", pRobot->appAutoDrive->tofArray->sensors[i].distance);
         cJSON_AddItemToArray(readings, reading);
@@ -140,7 +141,7 @@ static esp_err_t api_post_handler(httpd_req_t *req) {
     return ESP_OK;
 }
 
-httpd_handle_t start_webserver(Robot* robot) {
+httpd_handle_t start_webserver(Robot *robot) {
 
     pRobot = robot;
 

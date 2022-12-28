@@ -26,11 +26,16 @@ TOFArray::TOFArray() {
      */
 
     sensors = new TOFSensor[size]{
-            TOFSensor(new VL53L0X(I2C_MASTER_NUM, TOF_SENSOR_DEFAULT_ADDRESS, (gpio_num_t)CONFIG_TOF0_XSHUT), 360-26.4, 137, -30),
-            TOFSensor(new VL53L0X(I2C_MASTER_NUM, TOF_SENSOR_DEFAULT_ADDRESS, (gpio_num_t)CONFIG_TOF1_XSHUT), 0, 132, 0),
-            TOFSensor(new VL53L0X(I2C_MASTER_NUM, TOF_SENSOR_DEFAULT_ADDRESS, (gpio_num_t)CONFIG_TOF2_XSHUT), 26.4, 137, 30),
-            TOFSensor(new VL53L0X(I2C_MASTER_NUM, TOF_SENSOR_DEFAULT_ADDRESS, (gpio_num_t)CONFIG_TOF3_XSHUT), 90, 0, 75),
-            TOFSensor(new VL53L0X(I2C_MASTER_NUM, TOF_SENSOR_DEFAULT_ADDRESS, (gpio_num_t)CONFIG_TOF4_XSHUT), 270, 0, -75)
+            TOFSensor(new VL53L0X(I2C_MASTER_NUM, TOF_SENSOR_DEFAULT_ADDRESS, (gpio_num_t) CONFIG_TOF0_XSHUT),
+                      360 - 26.4, 137, -30),
+            TOFSensor(new VL53L0X(I2C_MASTER_NUM, TOF_SENSOR_DEFAULT_ADDRESS, (gpio_num_t) CONFIG_TOF1_XSHUT), 0, 132,
+                      0),
+            TOFSensor(new VL53L0X(I2C_MASTER_NUM, TOF_SENSOR_DEFAULT_ADDRESS, (gpio_num_t) CONFIG_TOF2_XSHUT), 26.4,
+                      137, 30),
+            TOFSensor(new VL53L0X(I2C_MASTER_NUM, TOF_SENSOR_DEFAULT_ADDRESS, (gpio_num_t) CONFIG_TOF3_XSHUT), 90, 0,
+                      75),
+            TOFSensor(new VL53L0X(I2C_MASTER_NUM, TOF_SENSOR_DEFAULT_ADDRESS, (gpio_num_t) CONFIG_TOF4_XSHUT), 270, 0,
+                      -75)
     };
 
 }
@@ -79,14 +84,14 @@ void TOFArray::initSensor(TOFSensor sensor, uint8_t newAddr) {
 
 void TOFArray::initAllSensors() {
     uint8_t addr = 0x31;
-    for(int i=0; i < size; i++) {
+    for (int i = 0; i < size; i++) {
         initSensor(sensors[i], addr++);
     }
     encodeProximity();
 }
 
 void TOFArray::readAll() {
-    for(int i=0; i < size; i++) {
+    for (int i = 0; i < size; i++) {
         sensors[i].ping();
     }
     encodeProximity();
@@ -94,17 +99,17 @@ void TOFArray::readAll() {
 
 void TOFArray::readAllAvg() {
     uint16_t distances[size];
-    for(int i=0; i < size; i++) {
+    for (int i = 0; i < size; i++) {
         distances[i] = 0;
     }
-    for(int i=0; i < 3; i++) {
-        for(int j = 0; j < size; j++) {
-            distances[j] = distances[j] + sensors[j].device->readRangeSingleMillimeters()/3;
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < size; j++) {
+            distances[j] = distances[j] + sensors[j].device->readRangeSingleMillimeters() / 3;
         }
         usleep(1000);
     }
 
-    for(int j = 0; j < size; j++) {
+    for (int j = 0; j < size; j++) {
         sensors[j].distance = distances[j];
     }
     encodeProximity();
@@ -113,7 +118,7 @@ void TOFArray::readAllAvg() {
 void TOFArray::encodeProximity() {
     uint8_t p = 0;
     uint8_t pos = 4;
-    for(int i=0; i < size; i++) {
+    for (int i = 0; i < size; i++) {
         uint8_t v = sensors[i].distance > thresholds[i] ? 1 : 0;
         p = p + (v << pos);
         pos--;

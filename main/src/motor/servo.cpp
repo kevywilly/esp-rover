@@ -6,12 +6,13 @@
 
 
 Servo::Servo(const gpio_num_t &pwmPin, mcpwm_unit_t unit, mcpwm_timer_t timer, mcpwm_generator_t generator,
-             mcpwm_io_signals_t signal, servo_orientation_t orientation, uint32_t minUs, uint32_t maxUs, float minAngle, float maxAngle) : pwm_pin(
+             mcpwm_io_signals_t signal, servo_orientation_t orientation, uint32_t minUs, uint32_t maxUs, float minAngle,
+             float maxAngle) : pwm_pin(
         pwmPin), unit(unit), timer(timer), generator(generator), signal(signal), orientation(orientation),
-                                                                                                                                               _minMicros(minUs),
-                                                                                                                                               _maxMicros(maxUs),
-                                                                                                                                               _minAngle(minAngle),
-                                                                                                                                               _maxAngle(maxAngle){
+                               _minMicros(minUs),
+                               _maxMicros(maxUs),
+                               _minAngle(minAngle),
+                               _maxAngle(maxAngle) {
 }
 
 Servo::~Servo() {
@@ -35,29 +36,29 @@ void Servo::deInit() {
 
 // Note - duty is in the form 50.0 for 50%
 void Servo::setDuty(float duty) {
-    mcpwm_set_duty(unit,timer,generator,duty);
-    mcpwm_set_duty_type(unit,timer,generator,MCPWM_DUTY_MODE_0);
+    mcpwm_set_duty(unit, timer, generator, duty);
+    mcpwm_set_duty_type(unit, timer, generator, MCPWM_DUTY_MODE_0);
 }
 
 float Servo::setAngle(float angle) {
     angle = (angle < _minAngle ? _minAngle : (angle > _maxAngle ? _maxAngle : angle)) * orientation;
-    setMicroseconds(_minMicros + ((angle - _minAngle)*(_maxMicros-_minMicros))/(_maxAngle - _minAngle));
+    setMicroseconds(_minMicros + ((angle - _minAngle) * (_maxMicros - _minMicros)) / (_maxAngle - _minAngle));
     return angle;
 }
 
 float Servo::setPower(float power) {
-    if(power == 0) {
+    if (power == 0) {
         setDuty(0);
         return power;
     }
     power = (power < -1 ? -1 : power > 1 ? 1 : power) * orientation;
     // multiply by power 0.5 and add or subtract from _zero depending on direction (+ / -)
-    setMicroseconds(0.5 * (power*(_maxMicros - _minMicros) + (_minMicros+_maxMicros)));
+    setMicroseconds(0.5 * (power * (_maxMicros - _minMicros) + (_minMicros + _maxMicros)));
     return power;
 }
 
 void Servo::setMicroseconds(uint32_t micros) {
-    setDuty(100*micros/microseconds_per_cycle);
+    setDuty(100 * micros / microseconds_per_cycle);
 }
 /*
  * power = (power < -1 ? -1 : power > 1 ? 1 : power) * orientation;

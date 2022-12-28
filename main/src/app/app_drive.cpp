@@ -30,16 +30,20 @@ static float abs_max(float *values, int size) {
 
 AppDrive::AppDrive(QueueHandle_t queueDrive) : xQueue_In(queueDrive) {
 
-    this->cmd = new drive_command_t {0,0,0};
+    this->cmd = new drive_command_t{0, 0, 0};
 
     this->motors = new Servo[4]{
-            Servo((gpio_num_t)CONFIG_M0_PWM, MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_GEN_A, MCPWM0A, SERVO_ORIENTATION_NORMAL, SERVO_MIN_US-50, SERVO_MAX_US-50, -360, 360),
-            Servo((gpio_num_t)CONFIG_M1_PWM, MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_GEN_B, MCPWM0B, SERVO_ORIENTATION_REVERSE, SERVO_MIN_US-50, SERVO_MAX_US-50, -360, 360),
-            Servo((gpio_num_t)CONFIG_M2_PWM, MCPWM_UNIT_0, MCPWM_TIMER_1, MCPWM_GEN_A, MCPWM1A, SERVO_ORIENTATION_REVERSE, SERVO_MIN_US-50, SERVO_MAX_US-50, -360, 360),
-            Servo((gpio_num_t)CONFIG_M3_PWM, MCPWM_UNIT_0, MCPWM_TIMER_1, MCPWM_GEN_B, MCPWM1B, SERVO_ORIENTATION_NORMAL, SERVO_MIN_US-50, SERVO_MAX_US-50, -360, 360)
+            Servo((gpio_num_t) CONFIG_M0_PWM, MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_GEN_A, MCPWM0A,
+                  SERVO_ORIENTATION_NORMAL, SERVO_MIN_US - 50, SERVO_MAX_US - 50, -360, 360),
+            Servo((gpio_num_t) CONFIG_M1_PWM, MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_GEN_B, MCPWM0B,
+                  SERVO_ORIENTATION_REVERSE, SERVO_MIN_US - 50, SERVO_MAX_US - 50, -360, 360),
+            Servo((gpio_num_t) CONFIG_M2_PWM, MCPWM_UNIT_0, MCPWM_TIMER_1, MCPWM_GEN_A, MCPWM1A,
+                  SERVO_ORIENTATION_REVERSE, SERVO_MIN_US - 50, SERVO_MAX_US - 50, -360, 360),
+            Servo((gpio_num_t) CONFIG_M3_PWM, MCPWM_UNIT_0, MCPWM_TIMER_1, MCPWM_GEN_B, MCPWM1B,
+                  SERVO_ORIENTATION_NORMAL, SERVO_MIN_US - 50, SERVO_MAX_US - 50, -360, 360)
     };
 
-    for(int i=0; i < MOTOR_COUNT; i++) {
+    for (int i = 0; i < MOTOR_COUNT; i++) {
         motors[i].init();
     }
 }
@@ -51,7 +55,7 @@ void AppDrive::apply_command(drive_command_t cmd) {
              cmd.turn * 100);
 #endif
 
-    this->cmd = new drive_command_t {cmd};
+    this->cmd = new drive_command_t{cmd};
 
     float max_val;
     int i;
@@ -96,7 +100,7 @@ static void task(AppDrive *self) {
 
 void AppDrive::run() {
 
-    xTaskCreatePinnedToCore((TaskFunction_t)task, TAG, 5 * 1024, this, 5, NULL, 1);
+    xTaskCreatePinnedToCore((TaskFunction_t) task, TAG, 5 * 1024, this, 5, NULL, 1);
 }
 
 drive_command_t AppDrive::getCmd() const {

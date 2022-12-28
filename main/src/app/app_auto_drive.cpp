@@ -15,7 +15,7 @@ void AppAutoDrive::sendCmd(drive_command_t cmd) {
 }
 
 void AppAutoDrive::start() {
-    sendCmd({0,0,0});
+    sendCmd({0, 0, 0});
     tofArray->restart();
     usleep(1000);
     active = true;
@@ -38,40 +38,41 @@ bool AppAutoDrive::checkIsActive() {
 
 drive_command_t AppAutoDrive::getCmd2() {
     auto frame = *pFrame;
-    if(frame.isClear()) {
+    if (frame.isClear()) {
         return {.power = 0.8, .heading = 90, .turn = 0};
     }
-    if(frame.qIsClear(QFRONT)) {
-        if(frame.qIsClear(QLEFT) && frame.qIsClear(QRIGHT)) {
+    if (frame.qIsClear(QFRONT)) {
+        if (frame.qIsClear(QLEFT) && frame.qIsClear(QRIGHT)) {
             return {.power = 0.5, .heading = 90, .turn = 0};
-        } else if(frame.qIsClear(QLEFT)) {
+        } else if (frame.qIsClear(QLEFT)) {
             return {.power = 0.3, .heading = 180, .turn = 0};
-        } else if(frame.qIsClear(QRIGHT)) {
+        } else if (frame.qIsClear(QRIGHT)) {
             return {.power = 0.3, .heading = 0, .turn = 0};
         } else {
             return {.power = 0.3, .heading = 90, .turn = 0};
         }
     } else {
         auto q0 = pFrame->status_t().q0;
-        if(pLeft(q0)) {
+        if (pLeft(q0)) {
             // spin left
             return {.power = 0, .heading = 90, .turn = 0.3};
-        } else  {
+        } else {
             // spin right
             return {.power = 0, .heading = 90, .turn = -0.3};
         }
     }
 }
+
 drive_command_t AppAutoDrive::getCmd() {
 
-    if(tofArray->isClear(FRONT)) {
-        if(tofArray->isClear(SIDES)) {
+    if (tofArray->isClear(FRONT)) {
+        if (tofArray->isClear(SIDES)) {
             // go forward
             return {.power = 0.5, .heading = 90, .turn = 0};
-        } else if(tofArray->isClear(LFT)) {
+        } else if (tofArray->isClear(LFT)) {
             // slide left
             return {.power = 0.3, .heading = 180, .turn = 0};
-        } else if(tofArray->isClear(RGT)) {
+        } else if (tofArray->isClear(RGT)) {
             // slide right
             return {.power = 0.3, .heading = 0, .turn = 0};
         } else {
@@ -79,31 +80,32 @@ drive_command_t AppAutoDrive::getCmd() {
             return {.power = 0.3, .heading = 90, .turn = 0};
         }
     } else {
-        if(tofArray->isClear(FL)) {
+        if (tofArray->isClear(FL)) {
             // spin left
             return {.power = 0, .heading = 90, .turn = 0.3};
-        } else  {
+        } else {
             // spin right
             return {.power = 0, .heading = 90, .turn = -0.3};
         }
     }
 }
+
 static void task(AppAutoDrive *self) {
 
-    TOFArray * tofArray = self->tofArray;
-    uint8_t * proximity = &tofArray->proximity;
-    TOFSensor * tofSensors = tofArray->sensors;
+    TOFArray *tofArray = self->tofArray;
+    uint8_t *proximity = &tofArray->proximity;
+    TOFSensor *tofSensors = tofArray->sensors;
 
-    while(1) {
+    while (1) {
         self->checkIsActive();
 
         tofArray->readAllAvg();
 
         proximity_reading_t readings[5];
-        for(int i=0; i < 5; i++) {
-            readings[i] = {.angle = (float)tofArray->sensors[i].angle, .distance = tofArray->sensors[i].distance, .offset = tofArray->sensors[i].offset, .quality=255};
+        for (int i = 0; i < 5; i++) {
+            readings[i] = {.angle = (float) tofArray->sensors[i].angle, .distance = tofArray->sensors[i].distance, .offset = tofArray->sensors[i].offset, .quality=255};
         }
-        self->pFrame->applyReadings(readings,5);
+        self->pFrame->applyReadings(readings, 5);
         ESP_LOGI(TAG, "PROX_status: %d", self->pFrame->status());
         proximity_status_t tstat = self->pFrame->status_t();
         printf("%d, %d, %d, %d", tstat.q0, tstat.q1, tstat.q2, tstat.q3);
@@ -127,7 +129,7 @@ static void task(AppAutoDrive *self) {
         ESP_LOGI(TAG, "CMD: p: %f, h: %f, t: %f", cmd.power, cmd.heading, cmd.turn);
 
 #endif
-        if(self->isActive()) {
+        if (self->isActive()) {
             self->sendCmd(cmd);
         }
         vTaskDelay(pdMS_TO_TICKS(60));
@@ -135,7 +137,7 @@ static void task(AppAutoDrive *self) {
 }
 
 void AppAutoDrive::run() {
-    xTaskCreatePinnedToCore((TaskFunction_t)task, TAG, 5 * 1024, this, 5, NULL, 1);
+    xTaskCreatePinnedToCore((TaskFunction_t) task, TAG, 5 * 1024, this, 5, NULL, 1);
 }
 
 AppAutoDrive::AppAutoDrive(QueueHandle_t xQueueIn, QueueHandle_t xQueueDrive, ProximityFrame *pFrame)

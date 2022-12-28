@@ -13,34 +13,34 @@ typedef struct {
     float pitch;
 } look_cmd_t;
 
-class AppLook {
-public:
-    QueueHandle_t xQueue_In;
+class AppLook{
+        public:
+        QueueHandle_t xQueue_In;
 
-    AppLook(const QueueHandle_t queue_in);
+        AppLook(const QueueHandle_t queue_in);
 
-    void run();
+        void run();
 
-    void setYaw(float yaw);
+        void setYaw(float yaw);
 
-    void setPitch(float pitch);
+        void setPitch(float pitch);
 
-    void apply(look_cmd_t cmd);
+        void apply(look_cmd_t cmd);
 
-    float getYaw() const;
+        float getYaw() const;
 
-    float getPitch() const;
+        float getPitch() const;
 
-    look_cmd_t  getCmd() const {
-        return *_cmd;
-    }
+        look_cmd_t  getCmd() const {
+            return *_cmd;
+        }
 
-    Servo * _yawServo;
-    Servo * _pitchServo;
+        Servo * _yawServo;
+        Servo * _pitchServo;
 
-private:
-    look_cmd_t * _cmd = nullptr;
-    float _yaw = 0;
-    float _pitch = 0;
+        private:
+        look_cmd_t * _cmd = nullptr;
+        float _yaw = 0;
+        float _pitch = 0;
 };
 
